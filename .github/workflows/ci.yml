@@ -1,0 +1,36 @@
+name: sentinel-ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+env:
+  SENTINEL_VERSION: 0.41.0
+
+jobs:
+  validate:
+    name: fmt / test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install Sentinel CLI
+        run: |
+          curl -fsSL "https://releases.hashicorp.com/sentinel/${SENTINEL_VERSION}/sentinel_${SENTINEL_VERSION}_linux_amd64.zip" -o /tmp/sentinel.zip
+          unzip -o /tmp/sentinel.zip -d /tmp/sentinel
+          sudo install /tmp/sentinel/sentinel /usr/local/bin/
+          sentinel version
+
+      - name: sentinel fmt
+        run: |
+          sentinel fmt -check \
+            tencentcloud/*.sentinel \
+            tencentcloud/**/*.sentinel \
+            common-functions/**/*.sentinel
+
+      - name: sentinel test
+        run: cd tencentcloud && sentinel test -verbose
