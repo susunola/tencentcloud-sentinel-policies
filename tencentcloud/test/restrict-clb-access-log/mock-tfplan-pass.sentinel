@@ -1,0 +1,15 @@
+resource_changes = {
+  "tencentcloud_clb_instance.web": {
+    "address":       "tencentcloud_clb_instance.web",
+    "mode":          "managed",
+    "type":          "tencentcloud_clb_instance",
+    "name":          "web",
+    "provider_name": "registry.terraform.io/tencentcloudstack/tencentcloud",
+    "change": {
+      "actions": ["create"],
+      "after": {
+        "log_set_id": "log-abc123",
+      },
+    },
+  },
+}

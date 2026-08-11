@@ -1,0 +1,15 @@
+resource_changes = {
+  "tencentcloud_cbs_storage.logs": {
+    "address":       "tencentcloud_cbs_storage.logs",
+    "mode":          "managed",
+    "type":          "tencentcloud_cbs_storage",
+    "name":          "logs",
+    "provider_name": "registry.terraform.io/tencentcloudstack/tencentcloud",
+    "change": {
+      "actions": ["create"],
+      "after": {
+        "storage_name": "logs-disk",
+      },
+    },
+  },
+}

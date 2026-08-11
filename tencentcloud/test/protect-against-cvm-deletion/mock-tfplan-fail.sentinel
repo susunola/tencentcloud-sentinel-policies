@@ -1,0 +1,17 @@
+resource_changes = {
+  "tencentcloud_instance.api": {
+    "address":       "tencentcloud_instance.api",
+    "mode":          "managed",
+    "type":          "tencentcloud_instance",
+    "name":          "api",
+    "provider_name": "registry.terraform.io/tencentcloudstack/tencentcloud",
+    "change": {
+      "actions": ["create"],
+      "after": {
+        "tags": {
+          "Environment": "prod",
+        },
+      },
+    },
+  },
+}

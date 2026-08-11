@@ -1,0 +1,16 @@
+resource_changes = {
+  "tencentcloud_kubernetes_cluster.legacy": {
+    "address":       "tencentcloud_kubernetes_cluster.legacy",
+    "mode":          "managed",
+    "type":          "tencentcloud_kubernetes_cluster",
+    "name":          "legacy",
+    "provider_name": "registry.terraform.io/tencentcloudstack/tencentcloud",
+    "change": {
+      "actions": ["create"],
+      "after": {
+        "cluster_version": "1.24",
+        "network_type":    "Flannel",
+      },
+    },
+  },
+}

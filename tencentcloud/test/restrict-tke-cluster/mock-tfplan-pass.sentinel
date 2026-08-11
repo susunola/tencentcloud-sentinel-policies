@@ -1,0 +1,17 @@
+resource_changes = {
+  "tencentcloud_kubernetes_cluster.prod": {
+    "address":       "tencentcloud_kubernetes_cluster.prod",
+    "mode":          "managed",
+    "type":          "tencentcloud_kubernetes_cluster",
+    "name":          "prod",
+    "provider_name": "registry.terraform.io/tencentcloudstack/tencentcloud",
+    "change": {
+      "actions": ["create"],
+      "after": {
+        "vpc_id":          "vpc-abc123",
+        "cluster_version": "1.30",
+        "network_type":    "VPC-CNI",
+      },
+    },
+  },
+}

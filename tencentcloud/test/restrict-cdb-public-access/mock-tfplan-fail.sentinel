@@ -1,0 +1,15 @@
+resource_changes = {
+  "tencentcloud_mysql_instance.prod": {
+    "address":       "tencentcloud_mysql_instance.prod",
+    "mode":          "managed",
+    "type":          "tencentcloud_mysql_instance",
+    "name":          "prod",
+    "provider_name": "registry.terraform.io/tencentcloudstack/tencentcloud",
+    "change": {
+      "actions": ["create"],
+      "after": {
+        "internet_service": 1,
+      },
+    },
+  },
+}

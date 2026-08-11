@@ -1,0 +1,9 @@
+providers = {
+  "tencentcloud": {
+    "config": {
+      "region": {
+        "constant_value": "ap-tokyo",
+      },
+    },
+  },
+}

@@ -1,0 +1,15 @@
+resource_changes = {
+  "tencentcloud_cbs_storage.data": {
+    "address":       "tencentcloud_cbs_storage.data",
+    "mode":          "managed",
+    "type":          "tencentcloud_cbs_storage",
+    "name":          "data",
+    "provider_name": "registry.terraform.io/tencentcloudstack/tencentcloud",
+    "change": {
+      "actions": ["create"],
+      "after": {
+        "encrypt": true,
+      },
+    },
+  },
+}

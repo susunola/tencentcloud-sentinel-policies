@@ -1,0 +1,15 @@
+resource_changes = {
+  "tencentcloud_vpc.main": {
+    "address":       "tencentcloud_vpc.main",
+    "mode":          "managed",
+    "type":          "tencentcloud_vpc",
+    "name":          "main",
+    "provider_name": "registry.terraform.io/tencentcloudstack/tencentcloud",
+    "change": {
+      "actions": ["create"],
+      "after": {
+        "cidr_block": "10.0.0.0/16",
+      },
+    },
+  },
+}

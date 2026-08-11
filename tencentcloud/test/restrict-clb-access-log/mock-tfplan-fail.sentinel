@@ -1,0 +1,15 @@
+resource_changes = {
+  "tencentcloud_clb_instance.app": {
+    "address":       "tencentcloud_clb_instance.app",
+    "mode":          "managed",
+    "type":          "tencentcloud_clb_instance",
+    "name":          "app",
+    "provider_name": "registry.terraform.io/tencentcloudstack/tencentcloud",
+    "change": {
+      "actions": ["create"],
+      "after": {
+        "clb_name": "app-lb",
+      },
+    },
+  },
+}

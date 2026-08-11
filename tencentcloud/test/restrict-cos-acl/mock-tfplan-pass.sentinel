@@ -1,0 +1,15 @@
+resource_changes = {
+  "tencentcloud_cos_bucket.assets": {
+    "address":       "tencentcloud_cos_bucket.assets",
+    "mode":          "managed",
+    "type":          "tencentcloud_cos_bucket",
+    "name":          "assets",
+    "provider_name": "registry.terraform.io/tencentcloudstack/tencentcloud",
+    "change": {
+      "actions": ["create"],
+      "after": {
+        "acl": "private",
+      },
+    },
+  },
+}
