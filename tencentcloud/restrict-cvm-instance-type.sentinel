@@ -1,0 +1,30 @@
+# restrict-cvm-instance-type
+# Requires all CVM instances to use only approved instance types.
+# Drop "null" from allowed_types to also block instances with computed types.
+
+import "tfplan-functions" as plan
+
+# Approved CVM instance types
+# Customize in your policy set via param or edit this list directly.
+param allowed_types default [
+  "S5.MEDIUM4",
+  "S5.LARGE8",
+  "S5.2XLARGE16",
+  "S5.4XLARGE32",
+  "S6.MEDIUM4",
+  "S6.LARGE8",
+  "SA2.MEDIUM4",
+  "SA2.LARGE8",
+  "SA3.MEDIUM8",
+  "SA3.LARGE16",
+]
+
+allInstances = plan.find_resources("tencentcloud_instance")
+
+violatingInstances = plan.filter_attribute_not_in_list(
+  allInstances, "instance_type", allowed_types, true
+)
+
+main = rule {
+  length(violatingInstances["messages"]) is 0
+}

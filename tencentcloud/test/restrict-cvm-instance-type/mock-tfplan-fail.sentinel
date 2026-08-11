@@ -1,0 +1,15 @@
+resource_changes = {
+  "tencentcloud_instance.bad": {
+    "address":       "tencentcloud_instance.bad",
+    "mode":          "managed",
+    "type":          "tencentcloud_instance",
+    "name":          "bad",
+    "provider_name": "registry.terraform.io/tencentcloudstack/tencentcloud",
+    "change": {
+      "actions": ["create"],
+      "after": {
+        "instance_type": "C3.8XLARGE256",
+      },
+    },
+  },
+}

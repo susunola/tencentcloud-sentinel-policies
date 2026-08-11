@@ -1,0 +1,17 @@
+resource_changes = {
+  "tencentcloud_cos_bucket.data": {
+    "address":       "tencentcloud_cos_bucket.data",
+    "mode":          "managed",
+    "type":          "tencentcloud_cos_bucket",
+    "name":          "data",
+    "provider_name": "registry.terraform.io/tencentcloudstack/tencentcloud",
+    "change": {
+      "actions": ["create"],
+      "after": {
+        "bucket":              "my-data-bucket-1250000000",
+        "encryption_algorithm": "AES256",
+        "acl":                 "private",
+      },
+    },
+  },
+}

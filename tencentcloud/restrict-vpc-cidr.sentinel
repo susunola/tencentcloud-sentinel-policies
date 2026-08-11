@@ -1,0 +1,39 @@
+# restrict-vpc-cidr
+# Ensures VPC CIDR blocks fall within approved ranges.
+# Prevents overlapping or non-standard CIDR assignments that could
+# cause routing conflicts or violate network architecture standards.
+
+import "tfplan-functions" as plan
+
+# Approved CIDR ranges (RFC 1918 private ranges recommended)
+param allowed_cidr_patterns default [
+  "10\\.[0-9]+\\.[0-9]+\\.[0-9]+\\/[0-9]+",
+  "172\\.(1[6-9]|2[0-9]|3[0-1])\\.[0-9]+\\.[0-9]+\\/[0-9]+",
+  "192\\.168\\.[0-9]+\\.[0-9]+\\/[0-9]+",
+]
+
+allVPCs = plan.find_resources("tencentcloud_vpc")
+
+violations = {}
+for allVPCs as address, vpc {
+  cidr = plan.evaluate_attribute(vpc, "cidr_block") else null
+  if cidr is not null {
+    matched = false
+    for allowed_cidr_patterns as pattern {
+      if cidr matches pattern {
+        matched = true
+      }
+    }
+    if not matched {
+      msg = address + " uses CIDR block '" + cidr +
+            "' which does not match any allowed pattern. " +
+            "Only RFC 1918 private CIDR blocks are permitted."
+      violations[address] = msg
+      print(msg)
+    }
+  }
+}
+
+main = rule {
+  length(violations) is 0
+}

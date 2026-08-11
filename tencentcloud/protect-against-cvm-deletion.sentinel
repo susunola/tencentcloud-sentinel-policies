@@ -1,0 +1,45 @@
+# protect-against-cvm-deletion
+# Prevents accidental deletion of CVM instances that have
+# termination protection disabled. This catches the common mistake
+# of forgetting to set `disable_api_termination = true` on critical
+# production instances.
+#
+# Set param protected_tag to the tag value that indicates
+# a production/critical instance.
+
+import "tfplan-functions" as plan
+
+# Tag key:value that marks instances requiring termination protection
+param protected_tag_key default "Environment"
+param protected_tag_value default "prod"
+
+allInstances = plan.find_resources("tencentcloud_instance")
+
+violations = {}
+for allInstances as address, inst {
+  # Check if this is a protected instance
+  tags = plan.evaluate_attribute(inst, "tags") else {}
+  env = tags[protected_tag_key] else ""
+  if env is not protected_tag_value {
+    continue
+  }
+
+  # Check if termination protection is enabled
+  disable_termination = plan.evaluate_attribute(inst, "disable_monitor_service") else null
+  # Note: tencentcloud_instance uses disable_api_termination in some versions
+  # and different mechanisms in others. This policy checks the planned state.
+  # The key attribute is `disable_api_termination` (available in provider >= 1.81.x)
+  api_termination = plan.evaluate_attribute(inst, "disable_api_termination") else null
+  if api_termination is null or api_termination is not true {
+    msg = address + " is a production instance (" + protected_tag_key +
+          "=" + protected_tag_value + ") but does not have " +
+          "disable_api_termination enabled. Set disable_api_termination=true " +
+          "to protect against accidental deletion."
+    violations[address] = msg
+    print(msg)
+  }
+}
+
+main = rule {
+  length(violations) is 0
+}

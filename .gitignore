@@ -1,0 +1,14 @@
+# Sentinel test artifacts
+*.json
+
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Sentinel simulator
+sentinel

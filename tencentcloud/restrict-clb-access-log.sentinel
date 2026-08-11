@@ -1,0 +1,23 @@
+# restrict-clb-access-log
+# Requires all CLB instances to have access logging enabled.
+# Access logs are critical for security auditing, troubleshooting,
+# and compliance with regulations like MLPS 2.0 (等保2.0) in China.
+
+import "tfplan-functions" as plan
+
+allCLBs = plan.find_resources("tencentcloud_clb_instance")
+
+violations = {}
+for allCLBs as address, clb {
+  log_enabled = plan.evaluate_attribute(clb, "log_set_id") else null
+  if log_enabled is null {
+    msg = address + " does not have access logging enabled. " +
+          "All CLB instances must have log_set_id configured."
+    violations[address] = msg
+    print(msg)
+  }
+}
+
+main = rule {
+  length(violations) is 0
+}

@@ -1,0 +1,24 @@
+resource_changes = {
+  "tencentcloud_security_group.bad": {
+    "address":       "tencentcloud_security_group.bad",
+    "mode":          "managed",
+    "type":          "tencentcloud_security_group",
+    "name":          "bad",
+    "provider_name": "registry.terraform.io/tencentcloudstack/tencentcloud",
+    "change": {
+      "actions": ["create"],
+      "after": {
+        "name": "bad-sg",
+        "ingress": [
+          {
+            "cidr_block":  "0.0.0.0/0",
+            "protocol":    "TCP",
+            "port":        "22",
+            "action":      "ACCEPT",
+            "description": "SSH from anywhere - BAD!",
+          },
+        ],
+      },
+    },
+  },
+}

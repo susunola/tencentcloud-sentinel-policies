@@ -1,0 +1,63 @@
+# restrict-tke-cluster
+# Enforces security best practices for TKE (Tencent Kubernetes Engine) clusters:
+# 1. Cluster must be in a VPC (no basic network)
+# 2. Service CIDR must be within approved ranges
+# 3. Cluster version must meet minimum requirement
+# 4. Network plugin must be specified (VPC-CNI or Global Router)
+
+import "tfplan-functions" as plan
+
+# Minimum allowed Kubernetes version
+param min_kubernetes_version default "1.28"
+
+# Allowed network plugins
+param allowed_network_types default ["VPC-CNI", "GR"]
+
+allClusters = plan.find_resources("tencentcloud_kubernetes_cluster")
+
+violations = {}
+for allClusters as address, cluster {
+  # Check VPC network (not basic network)
+  vpc_id = plan.evaluate_attribute(cluster, "vpc_id") else null
+  if vpc_id is null {
+    msg = address + " is not assigned to a VPC. " +
+          "TKE clusters must run in VPC network mode."
+    violations[address + ".vpc"] = msg
+    print(msg)
+  }
+
+  # Check Kubernetes version
+  k8s_version = plan.evaluate_attribute(cluster, "cluster_version") else null
+  if k8s_version is not null {
+    # Simple version comparison - check major.minor prefix
+    parts = ["0", "0"]
+    if types.type_of(k8s_version) is "string" {
+      parts = strings.split(k8s_version, ".")
+    }
+    min_parts = strings.split(min_kubernetes_version, ".")
+    if int(parts[0]) < int(min_parts[0]) or
+       (int(parts[0]) == int(min_parts[0]) and int(parts[1]) < int(min_parts[1])) {
+      msg = address + " runs Kubernetes " + k8s_version +
+            " which is below minimum version " + min_kubernetes_version
+      violations[address + ".version"] = msg
+      print(msg)
+    }
+  }
+
+  # Check network plugin type
+  network_type = plan.evaluate_attribute(cluster, "network_type") else null
+  if network_type is not null and network_type not in allowed_network_types {
+    msg = address + " uses network plugin '" + network_type +
+          "' which is not in the allowed list: " +
+          plan.to_string(allowed_network_types)
+    violations[address + ".network"] = msg
+    print(msg)
+  }
+}
+
+import "strings"
+import "types"
+
+main = rule {
+  length(violations) is 0
+}

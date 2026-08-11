@@ -1,0 +1,24 @@
+# restrict-cos-acl
+# Requires all COS buckets to use private ACL.
+# Public-read and public-read-write buckets are common causes of data leaks.
+# This policy blocks creation or update of any bucket with non-private ACL.
+
+import "tfplan-functions" as plan
+
+allBuckets = plan.find_resources("tencentcloud_cos_bucket")
+
+# COS buckets MUST use "private" ACL
+violations = {}
+for allBuckets as address, bucket {
+  acl = plan.evaluate_attribute(bucket, "acl") else null
+  if acl is not null and acl is not "private" {
+    msg = address + " has ACL set to '" + acl +
+          "'. COS bucket ACL must be 'private'."
+    violations[address] = msg
+    print(msg)
+  }
+}
+
+main = rule {
+  length(violations) is 0
+}

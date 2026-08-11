@@ -1,0 +1,15 @@
+resource_changes = {
+  "tencentcloud_instance.web": {
+    "address":       "tencentcloud_instance.web",
+    "mode":          "managed",
+    "type":          "tencentcloud_instance",
+    "name":          "web",
+    "provider_name": "registry.terraform.io/tencentcloudstack/tencentcloud",
+    "change": {
+      "actions": ["create"],
+      "after": {
+        "instance_type": "S5.LARGE8",
+      },
+    },
+  },
+}

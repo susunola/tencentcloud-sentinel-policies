@@ -1,0 +1,36 @@
+# enforce-mandatory-tags
+# Requires that specified Tencent Cloud resources have all mandatory tags.
+# This is the most foundational governance policy for any cloud environment.
+
+import "tfplan-functions" as plan
+import "tencentcloud-functions" as tc
+
+# Resource types that must carry standard tags
+param resource_types default [
+  "tencentcloud_instance",
+  "tencentcloud_cos_bucket",
+  "tencentcloud_clb_instance",
+  "tencentcloud_mysql_instance",
+  "tencentcloud_vpc",
+  "tencentcloud_cbs_storage",
+  "tencentcloud_kubernetes_cluster",
+  "tencentcloud_redis_instance",
+]
+
+# Required tags for all tagged resources
+param mandatory_tags default [
+  "Owner",
+  "Environment",
+  "CostCenter",
+  "ManagedBy",
+]
+
+allResources = tc.find_resources_with_standard_tags(resource_types)
+
+violatingResources = plan.filter_attribute_not_contains_list(
+  allResources, "tags", mandatory_tags, true
+)
+
+main = rule {
+  length(violatingResources["messages"]) is 0
+}

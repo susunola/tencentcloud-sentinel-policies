@@ -1,0 +1,22 @@
+# require-cos-encryption
+# Requires all COS buckets to have server-side encryption enabled.
+# Supports both SSE-COS (Tencent Cloud managed keys) and SSE-KMS (KMS managed keys).
+
+import "tfplan-functions" as plan
+
+allBuckets = plan.find_resources("tencentcloud_cos_bucket")
+
+violations = {}
+for allBuckets as address, bucket {
+  encrypt = plan.evaluate_attribute(bucket, "encryption_algorithm") else null
+  if encrypt is null {
+    msg = address + " does not have encryption enabled. " +
+          "All COS buckets must have server-side encryption."
+    violations[address] = msg
+    print(msg)
+  }
+}
+
+main = rule {
+  length(violations) is 0
+}

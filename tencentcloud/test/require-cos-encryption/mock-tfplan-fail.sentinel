@@ -1,0 +1,16 @@
+resource_changes = {
+  "tencentcloud_cos_bucket.leaky": {
+    "address":       "tencentcloud_cos_bucket.leaky",
+    "mode":          "managed",
+    "type":          "tencentcloud_cos_bucket",
+    "name":          "leaky",
+    "provider_name": "registry.terraform.io/tencentcloudstack/tencentcloud",
+    "change": {
+      "actions": ["create"],
+      "after": {
+        "bucket": "my-leaky-bucket-1250000000",
+        "acl":    "public-read",
+      },
+    },
+  },
+}
