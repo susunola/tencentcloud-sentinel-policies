@@ -27,9 +27,7 @@ param mandatory_tags default [
 
 allResources = tc.find_resources_with_standard_tags(resource_types)
 
-violatingResources = plan.filter_attribute_not_contains_list(
-  allResources, "tags", mandatory_tags, true
-)
+violatingResources = plan.filter_attribute_not_contains_list(allResources, "tags", mandatory_tags, true)
 
 main = rule {
   length(violatingResources["messages"]) is 0

@@ -18,9 +18,9 @@ param unrestricted_cidrs default ["0.0.0.0/0", "::/0"]
 all_rules = tc.find_security_group_rules()
 
 violations = {}
-for all_rules as key, rule {
-  cidr = rule.cidr_block else null
-  port = rule.port else null
+for all_rules as key, sg_rule {
+  cidr = sg_rule.cidr_block else null
+  port = sg_rule.port else null
 
   if cidr in unrestricted_cidrs {
     if port in forbidden_ports {

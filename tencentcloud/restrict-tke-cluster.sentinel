@@ -1,11 +1,12 @@
 # restrict-tke-cluster
 # Enforces security best practices for TKE (Tencent Kubernetes Engine) clusters:
 # 1. Cluster must be in a VPC (no basic network)
-# 2. Service CIDR must be within approved ranges
-# 3. Cluster version must meet minimum requirement
-# 4. Network plugin must be specified (VPC-CNI or Global Router)
+# 2. Cluster version must meet minimum requirement
+# 3. Network plugin must be specified (VPC-CNI or Global Router)
 
 import "tfplan-functions" as plan
+import "strings"
+import "types"
 
 # Minimum allowed Kubernetes version
 param min_kubernetes_version default "1.28"
@@ -29,7 +30,6 @@ for allClusters as address, cluster {
   # Check Kubernetes version
   k8s_version = plan.evaluate_attribute(cluster, "cluster_version") else null
   if k8s_version is not null {
-    # Simple version comparison - check major.minor prefix
     parts = ["0", "0"]
     if types.type_of(k8s_version) is "string" {
       parts = strings.split(k8s_version, ".")
@@ -54,9 +54,6 @@ for allClusters as address, cluster {
     print(msg)
   }
 }
-
-import "strings"
-import "types"
 
 main = rule {
   length(violations) is 0

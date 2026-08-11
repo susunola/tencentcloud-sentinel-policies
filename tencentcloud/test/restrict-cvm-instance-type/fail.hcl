@@ -1,4 +1,10 @@
-param allowed_types default ["S5.MEDIUM4", "S5.LARGE8"]
+module "tfplan-functions" {
+  source = "../../../common-functions/tfplan-functions/tfplan-functions.sentinel"
+}
+
+param "allowed_types" {
+  value = ["S5.MEDIUM4", "S5.LARGE8"]
+}
 
 mock "tfplan/v2" {
   module {

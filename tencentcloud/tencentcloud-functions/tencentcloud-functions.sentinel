@@ -32,16 +32,16 @@ find_security_group_rules = func() {
   sgs = plan.find_resources("tencentcloud_security_group")
   for sgs as address, sg {
     ingress = plan.find_blocks(sg, "ingress")
-    for ingress as i, rule {
-      rule["_parent_address"] = address
-      rule["_direction"] = "ingress"
-      rules[address + ".ingress[" + string(i) + "]"] = rule
+    for ingress as i, r {
+      r["_parent_address"] = address
+      r["_direction"] = "ingress"
+      rules[address + ".ingress[" + string(i) + "]"] = r
     }
     egress = plan.find_blocks(sg, "egress")
-    for egress as i, rule {
-      rule["_parent_address"] = address
-      rule["_direction"] = "egress"
-      rules[address + ".egress[" + string(i) + "]"] = rule
+    for egress as i, r {
+      r["_parent_address"] = address
+      r["_direction"] = "egress"
+      rules[address + ".egress[" + string(i) + "]"] = r
     }
   }
 
@@ -49,16 +49,16 @@ find_security_group_rules = func() {
   rule_sets = plan.find_resources("tencentcloud_security_group_rule_set")
   for rule_sets as address, rs {
     ingress_rules = plan.find_blocks(rs, "ingress")
-    for ingress_rules as i, rule {
-      rule["_parent_address"] = address
-      rule["_direction"] = "ingress"
-      rules[address + ".ingress[" + string(i) + "]"] = rule
+    for ingress_rules as i, r {
+      r["_parent_address"] = address
+      r["_direction"] = "ingress"
+      rules[address + ".ingress[" + string(i) + "]"] = r
     }
     egress_rules = plan.find_blocks(rs, "egress")
-    for egress_rules as i, rule {
-      rule["_parent_address"] = address
-      rule["_direction"] = "egress"
-      rules[address + ".egress[" + string(i) + "]"] = rule
+    for egress_rules as i, r {
+      r["_parent_address"] = address
+      r["_direction"] = "egress"
+      rules[address + ".egress[" + string(i) + "]"] = r
     }
   }
 

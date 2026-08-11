@@ -21,9 +21,7 @@ param allowed_types default [
 
 allInstances = plan.find_resources("tencentcloud_instance")
 
-violatingInstances = plan.filter_attribute_not_in_list(
-  allInstances, "instance_type", allowed_types, true
-)
+violatingInstances = plan.filter_attribute_not_in_list(allInstances, "instance_type", allowed_types, true)
 
 main = rule {
   length(violatingInstances["messages"]) is 0

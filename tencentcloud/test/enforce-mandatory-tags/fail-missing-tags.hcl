@@ -1,9 +1,21 @@
-param resource_types default ["tencentcloud_instance", "tencentcloud_cos_bucket"]
-param mandatory_tags default ["Owner", "Environment", "CostCenter"]
+module "tfplan-functions" {
+  source = "../../../common-functions/tfplan-functions/tfplan-functions.sentinel"
+}
+
+module "tencentcloud-functions" {
+  source = "../../tencentcloud-functions/tencentcloud-functions.sentinel"
+}
+
+param "resource_types" {
+  value = ["tencentcloud_instance", "tencentcloud_cos_bucket"]
+}
+param "mandatory_tags" {
+  value = ["Owner", "Environment", "CostCenter"]
+}
 
 mock "tfplan/v2" {
   module {
-    source = "./mock-tfplan-fail.sentinel"
+    source = "./mock-tfplan-fail-missing-tags.sentinel"
   }
 }
 
