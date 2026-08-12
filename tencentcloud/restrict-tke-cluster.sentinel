@@ -17,6 +17,29 @@ param min_kubernetes_version default "1.28"
 # Allowed network plugins — update as TKE adds new CNI options
 param allowed_network_types default ["VPC-CNI", "GR", "Cilium"]
 
+# is_digits returns true only if s is a non-empty string of ASCII digits.
+# int() on the Sentinel runtime throws a hard error (not catchable via
+# `else`) when given a non-numeric string, so every int() call below on
+# untrusted/attacker-controlled input must be guarded with this first.
+is_digits = func(s) {
+	if types.type_of(s) is not "string" {
+		return false
+	}
+	return s matches "^[0-9]+$"
+}
+
+# safe_version_part parses a single numeric segment out of a dot-split
+# version list at the given index, returning null if the segment is
+# missing (index out of range — Sentinel has no bounds checking and
+# would otherwise yield `undefined`) or non-numeric.
+safe_version_part = func(parts, idx) {
+	seg = parts[idx] else null
+	if seg is null or not is_digits(seg) {
+		return null
+	}
+	return int(seg)
+}
+
 allClusters = plan.find_resources("tencentcloud_kubernetes_cluster")
 
 violations = {}
@@ -30,21 +53,36 @@ for allClusters as address, cluster {
 		print(msg)
 	}
 
-	# Check Kubernetes version
+	# Check Kubernetes version.
+	# cluster_version is expected as "<major>.<minor>[.<patch>]" (e.g.
+	# "1.28"). Versions with fewer than 2 dot-separated segments, or any
+	# non-numeric segment, can't be safely compared, so they are treated
+	# as a parse failure and reported as a violation instead of letting
+	# an out-of-bounds list index or int() on a non-numeric string crash
+	# the whole policy evaluation with an uncaught runtime error.
 	k8s_version = plan.evaluate_attribute(cluster, "cluster_version") else null
-	if k8s_version is not null {
-		parts = ["0", "0"]
-		if types.type_of(k8s_version) is "string" {
-			parts = strings.split(k8s_version, ".")
-		}
+	if k8s_version is not null and types.type_of(k8s_version) is "string" {
+		parts = strings.split(k8s_version, ".")
 		min_parts = strings.split(min_kubernetes_version, ".")
-		if int(parts[0]) < int(min_parts[0]) or
-			(int(parts[0]) == int(min_parts[0]) and int(parts[1]) < int(min_parts[1])) {
-			msg = address + " runs Kubernetes " + k8s_version +
-				" which is below minimum version " +
-				min_kubernetes_version
+
+		major_int = safe_version_part(parts, 0)
+		minor_int = safe_version_part(parts, 1)
+
+		if major_int is null or minor_int is null {
+			msg = address + " has an unparseable cluster_version (\"" +
+				k8s_version + "\"); expected format \"<major>.<minor>\"."
 			violations[address + ".version"] = msg
 			print(msg)
+		} else {
+			min_major = safe_version_part(min_parts, 0) else 0
+			min_minor = safe_version_part(min_parts, 1) else 0
+			if major_int < min_major or (major_int == min_major and minor_int < min_minor) {
+				msg = address + " runs Kubernetes " + k8s_version +
+					" which is below minimum version " +
+					min_kubernetes_version
+				violations[address + ".version"] = msg
+				print(msg)
+			}
 		}
 	}
 

@@ -28,4 +28,29 @@ resource_changes = {
       },
     },
   },
+  "tencentcloud_security_group.malformed_range": {
+    "address":       "tencentcloud_security_group.malformed_range",
+    "mode":          "managed",
+    "type":          "tencentcloud_security_group",
+    "name":          "malformed_range",
+    "provider_name": "registry.terraform.io/tencentcloudstack/tencentcloud",
+    "change": {
+      "actions": ["create"],
+      "after": {
+        "name": "malformed-range-sg",
+        "ingress": [
+          {
+            # A non-numeric range segment ("abc") must not crash
+            # int() parsing in port_matches; is_digits() should
+            # reject this token before int() is ever called on it.
+            "cidr_block":  "0.0.0.0/0",
+            "protocol":    "TCP",
+            "port":        "80-abc",
+            "action":      "ACCEPT",
+            "description": "Malformed port range, should not crash evaluation",
+          },
+        ],
+      },
+    },
+  },
 }

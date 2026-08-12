@@ -13,4 +13,24 @@ resource_changes = {
       },
     },
   },
+  "tencentcloud_kubernetes_cluster.malformed_version": {
+    "address":       "tencentcloud_kubernetes_cluster.malformed_version",
+    "mode":          "managed",
+    "type":          "tencentcloud_kubernetes_cluster",
+    "name":          "malformed_version",
+    "provider_name": "registry.terraform.io/tencentcloudstack/tencentcloud",
+    "change": {
+      "actions": ["create"],
+      "after": {
+        # A single-segment version with no "." previously caused
+        # parts[1] to index out of range, which propagated as
+        # `undefined` through int() and the comparison and crashed the
+        # entire policy evaluation instead of being reported as a
+        # normal violation. This case must be flagged, not crash.
+        "vpc_id":          "vpc-def456",
+        "cluster_version": "1",
+        "network_type":    "VPC-CNI",
+      },
+    },
+  },
 }

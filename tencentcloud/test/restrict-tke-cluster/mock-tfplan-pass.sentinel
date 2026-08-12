@@ -14,4 +14,21 @@ resource_changes = {
       },
     },
   },
+  "tencentcloud_kubernetes_cluster.patch_version": {
+    "address":       "tencentcloud_kubernetes_cluster.patch_version",
+    "mode":          "managed",
+    "type":          "tencentcloud_kubernetes_cluster",
+    "name":          "patch_version",
+    "provider_name": "registry.terraform.io/tencentcloudstack/tencentcloud",
+    "change": {
+      "actions": ["create"],
+      "after": {
+        # Three-segment version (major.minor.patch) exceeding the
+        # minimum; extra segments beyond index 1 must be ignored safely.
+        "vpc_id":          "vpc-abc456",
+        "cluster_version": "1.28.4",
+        "network_type":    "GR",
+      },
+    },
+  },
 }

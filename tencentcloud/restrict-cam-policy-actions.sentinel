@@ -56,8 +56,17 @@ for allPolicies as address, policy {
 	parsed_successfully = false
 
 	if types.type_of(policy_document) is "string" {
-		parsed_document = json.unmarshal(policy_document) else null
-		parsed_successfully = types.type_of(parsed_document) is "map"
+		# json.unmarshal raises a hard (uncatchable-by-`else`) runtime
+		# error on malformed/non-JSON input, so it must be guarded with
+		# json.valid() first rather than relying on `else null` to
+		# absorb parse failures. Without this guard, a single malformed
+		# document attribute would crash the entire policy evaluation
+		# for every resource in the plan, not just report a violation
+		# for that resource.
+		if json.valid(policy_document) {
+			parsed_document = json.unmarshal(policy_document) else null
+			parsed_successfully = types.type_of(parsed_document) is "map"
+		}
 	}
 
 	violates = parsed_successfully and policy_has_forbidden_statement(parsed_document)

@@ -58,6 +58,18 @@ find_security_group_rules = func() {
 	return rules
 }
 
+### is_digits ###
+# int() raises a hard (uncatchable-by-`else`) runtime error when given a
+# non-numeric string, unlike int() on undefined which else can catch. Any
+# range token parsed from free-form port strings must be validated with
+# this guard before calling int() on it.
+is_digits = func(s) {
+	if s is null {
+		return false
+	}
+	return string(s) matches "^[0-9]+$"
+}
+
 ### port_matches ###
 # Tencent Cloud security-group ports are strings: all, 22, 22,80, or 20-30.
 # This helper returns true when one declared token contains target_port.
@@ -79,7 +91,7 @@ port_matches = func(port_value, target_port) {
 		}
 
 		range_parts = strings.split(token, "-")
-		if length(range_parts) is 2 {
+		if length(range_parts) is 2 and is_digits(range_parts[0]) and is_digits(range_parts[1]) {
 			start_port = int(range_parts[0])
 			end_port = int(range_parts[1])
 			if target_port >= start_port and target_port <= end_port {

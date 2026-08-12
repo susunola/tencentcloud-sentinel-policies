@@ -12,4 +12,31 @@ resource_changes = {
       },
     },
   },
+  "tencentcloud_redis_instance.db_closed": {
+    "address":       "tencentcloud_redis_instance.db_closed",
+    "mode":          "managed",
+    "type":          "tencentcloud_redis_instance",
+    "name":          "db_closed",
+    "provider_name": "registry.terraform.io/tencentcloudstack/tencentcloud",
+    "change": {
+      "actions": ["create"],
+      "after": {
+        "wan_address_switch": "close",
+      },
+    },
+  },
+  "tencentcloud_redis_instance.db_default": {
+    "address":       "tencentcloud_redis_instance.db_default",
+    "mode":          "managed",
+    "type":          "tencentcloud_redis_instance",
+    "name":          "db_default",
+    "provider_name": "registry.terraform.io/tencentcloudstack/tencentcloud",
+    "change": {
+      "actions": ["create"],
+      "after": {
+        # wan_address_switch omitted entirely, mirrors a plan where it
+        # defaults to "close" and is not sent as an explicit argument.
+      },
+    },
+  },
 }

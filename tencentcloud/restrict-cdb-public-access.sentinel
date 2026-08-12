@@ -20,12 +20,16 @@ for allDatabases as address, db {
 	}
 }
 
-# Also check tencentcloud_mysql_instance's internet_host parameter
+# Also check tencentcloud_redis_instance's wan_address_switch parameter.
+# Note: "wan_ip" is not a real attribute of this resource in the current
+# provider schema. The actual configurable field that controls public
+# internet exposure is "wan_address_switch" (String, "open"/"close",
+# default "close"); "wan_address" is only the computed IP once opened.
 allRedis = plan.find_resources("tencentcloud_redis_instance")
 for allRedis as address, redis {
-	wan = plan.evaluate_attribute(redis, "wan_ip") else null
-	if wan is not null {
-		msg = address + " has public internet access (wan_ip=" + string(wan) + "). " +
+	wan_switch = plan.evaluate_attribute(redis, "wan_address_switch") else null
+	if wan_switch is "open" {
+		msg = address + " has public internet access enabled (wan_address_switch=\"open\"). " +
 			"Redis instances must not be publicly accessible."
 		violations[address] = msg
 		print(msg)

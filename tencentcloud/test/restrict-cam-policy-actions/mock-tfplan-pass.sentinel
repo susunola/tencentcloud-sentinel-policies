@@ -9,4 +9,19 @@ resource_changes = {
       },
     },
   },
+  "tencentcloud_cam_policy.malformed": {
+    "mode": "managed",
+    "type": "tencentcloud_cam_policy",
+    "change": {
+      "actions": ["create"],
+      "after": {
+        # Not valid JSON at all. json.unmarshal throws a hard,
+        # uncatchable-by-`else` runtime error on input like this, so
+        # the policy must guard with json.valid() first — otherwise
+        # this single malformed document would crash evaluation for
+        # every tencentcloud_cam_policy resource in the plan.
+        "document": "not even json",
+      },
+    },
+  },
 }

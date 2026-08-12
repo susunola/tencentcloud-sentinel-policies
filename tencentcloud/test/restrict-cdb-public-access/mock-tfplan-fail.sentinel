@@ -12,4 +12,17 @@ resource_changes = {
       },
     },
   },
+  "tencentcloud_redis_instance.prod": {
+    "address":       "tencentcloud_redis_instance.prod",
+    "mode":          "managed",
+    "type":          "tencentcloud_redis_instance",
+    "name":          "prod",
+    "provider_name": "registry.terraform.io/tencentcloudstack/tencentcloud",
+    "change": {
+      "actions": ["create"],
+      "after": {
+        "wan_address_switch": "open",
+      },
+    },
+  },
 }

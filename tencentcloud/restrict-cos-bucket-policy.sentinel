@@ -56,7 +56,19 @@ allBucketPolicies = plan.find_resources("tencentcloud_cos_bucket_policy")
 violations = {}
 for allBucketPolicies as address, bucket_policy {
 	policy_json = plan.evaluate_attribute(bucket_policy, "policy") else ""
-	document = json.unmarshal(policy_json) else null
+	document = null
+
+	# json.unmarshal raises a hard (uncatchable-by-`else`) runtime error
+	# on malformed/non-JSON input, so it must be guarded with
+	# json.valid() first rather than relying on `else null` to absorb
+	# parse failures. Without this guard, a single malformed policy
+	# attribute would crash evaluation for every
+	# tencentcloud_cos_bucket_policy resource in the plan, not just
+	# report a violation for that resource.
+	if types.type_of(policy_json) is "string" and json.valid(policy_json) {
+		document = json.unmarshal(policy_json) else null
+	}
+
 	if policy_is_public(document) {
 		msg = address + " grants COS access to an anonymous principal. " +
 			"Use an explicit Tencent Cloud CAM principal and least-privilege scope."

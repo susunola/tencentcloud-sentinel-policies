@@ -9,4 +9,14 @@ resource_changes = {
       },
     },
   },
+  "tencentcloud_cos_bucket_policy.malformed_probe": {
+    "mode": "managed",
+    "type": "tencentcloud_cos_bucket_policy",
+    "change": {
+      "actions": ["create"],
+      "after": {
+        "policy": "not even json",
+      },
+    },
+  },
 }
