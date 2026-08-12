@@ -65,11 +65,6 @@ policy "require-provider-version-constraint" {
   enforcement_level = "advisory"
 }
 
-policy "restrict-cam-access-key-age" {
-  source            = "./restrict-cam-access-key-age.sentinel"
-  enforcement_level = "advisory"
-}
-
 policy "restrict-cam-policy-actions" {
   source            = "./restrict-cam-policy-actions.sentinel"
   enforcement_level = "advisory"
@@ -102,11 +97,6 @@ policy "restrict-cos-acl" {
 
 policy "restrict-cos-bucket-policy" {
   source            = "./restrict-cos-bucket-policy.sentinel"
-  enforcement_level = "hard-mandatory"
-}
-
-policy "restrict-cos-public-access" {
-  source            = "./restrict-cos-public-access.sentinel"
   enforcement_level = "hard-mandatory"
 }
 

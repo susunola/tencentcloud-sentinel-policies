@@ -17,6 +17,13 @@ resource_changes = {
             "action":      "ACCEPT",
             "description": "Internal HTTP only",
           },
+          {
+            "cidr_block":  "0.0.0.0/0",
+            "protocol":    "TCP",
+            "port":        "22",
+            "action":      "DROP",
+            "description": "Explicit public SSH deny",
+          },
         ],
       },
     },

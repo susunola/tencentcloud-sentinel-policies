@@ -1,11 +1,12 @@
 resource_changes = {
-  "tencentcloud_mysql_instance.example": {
+  "tencentcloud_mysql_backup_policy.example": {
     "mode": "managed",
-    "type": "tencentcloud_mysql_instance",
+    "type": "tencentcloud_mysql_backup_policy",
     "change": {
       "actions": ["create"],
       "after": {
-        "backup_retention_period": 7,
+        "mysql_id": "cdb-example",
+        "retention_period": 7,
       },
     },
   },

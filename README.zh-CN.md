@@ -60,8 +60,7 @@ tencentcloud-sentinel-policies/
 
 | 策略 | 强制级别 | 说明 |
 |---|---|---|
-| `restrict-cam-policy-actions` | advisory | 阻止 CAM Allow 策略同时使用 `Action=*` 和 `Resource=*` |
-| `restrict-cam-access-key-age` | advisory | 要求 CAM 访问密钥在配置期限内轮换 |
+| `restrict-cam-policy-actions` | advisory | 阻止腾讯云 CAM allow 策略同时使用 `action=*` 和 `resource=*` |
 
 ### 计算与 Kubernetes
 
@@ -85,8 +84,7 @@ tencentcloud-sentinel-policies/
 
 | 策略 | 强制级别 | 说明 |
 |---|---|---|
-| `restrict-cos-acl` | **hard-mandatory** | 要求 COS 使用 private ACL，并拒绝公开 Bucket Policy 主体 |
-| `restrict-cos-public-access` | **hard-mandatory** | 要求 COS 开启公网访问阻断 |
+| `restrict-cos-acl` | **hard-mandatory** | 要求 COS 使用 private ACL |
 | `restrict-cos-bucket-policy` | **hard-mandatory** | 拒绝包含通配符或匿名主体的 COS Bucket Policy |
 | `require-cos-encryption` | advisory | 要求 COS 服务端加密 |
 | `require-cos-versioning` | advisory | 要求 COS 开启对象版本控制 |
@@ -98,18 +96,18 @@ tencentcloud-sentinel-policies/
 | 策略 | 强制级别 | 说明 |
 |---|---|---|
 | `restrict-cdb-public-access` | **hard-mandatory** | 禁止 CDB 实例公网访问 |
-| `require-cdb-audit-log` | advisory | 要求 CDB 开启审计日志 |
-| `require-cdb-backup-retention` | advisory | 要求配置最低备份保留天数 |
-| `require-cdb-deletion-protection` | advisory | 要求 CDB 开启删除保护 |
+| `require-cdb-audit-log` | advisory | 校验已声明的 MySQL 审计服务及其保留期 |
+| `require-cdb-backup-retention` | advisory | 校验已声明的 MySQL 备份策略保留期 |
+| `require-cdb-deletion-protection` | advisory | 禁止 CDB 使用 `force_delete=true` 绕过回收站恢复 |
 | `require-kms-key-rotation` | advisory | 要求 KMS 密钥开启自动轮换 |
 
 ## 测试结果
 
-仓库当前包含 **25 条策略和 50 个通过/失败测试用例**。使用 Sentinel 0.41.0 执行完整测试集全部通过：
+仓库当前包含 **23 条策略和 48 个通过/失败测试用例**。使用 Sentinel 0.41.0 执行完整测试集全部通过：
 
 ```text
-25 条策略 PASS
-50 个测试用例 PASS
+23 条策略 PASS
+48 个测试用例 PASS
 0 条策略失败
 ```
 
@@ -123,7 +121,7 @@ test/<policy>/
 └── mock-tfplan-fail[-scenario].sentinel
 ```
 
-Provider 版本约束策略检查 `tfconfig/v2`，因此使用 `mock-tfconfig-*.sentinel`。
+Provider 版本约束策略检查 `tfconfig/v2`，因此使用 `mock-tfconfig-*.sentinel`。Provider 属性和资源映射记录在 [`docs/schema-verification.md`](docs/schema-verification.md)。
 
 ## 前置条件
 
@@ -176,8 +174,8 @@ policy "restrict-cvm-instance-type" {
 | `restrict-cvm-image-source` | `allowed_image_prefixes` |
 | `restrict-tke-cluster` | `min_kubernetes_version`、`allowed_network_types` |
 | `require-cdb-backup-retention` | `min_backup_retention_days` |
+| `require-cdb-audit-log` | `min_audit_log_retention_days` |
 | `restrict-cam-policy-actions` | `forbidden_wildcard` |
-| `restrict-cam-access-key-age` | `max_key_age_days` |
 | `require-kms-key-rotation` | 无 |
 | `require-provider-version-constraint` | 无 |
 | `prevent-resource-destruction` | `protected_tags` |

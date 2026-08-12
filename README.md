@@ -60,8 +60,7 @@ tencentcloud-sentinel-policies/
 
 | Policy | Enforcement | Description |
 |---|---|---|
-| `restrict-cam-policy-actions` | advisory | Block CAM Allow statements with `Action=*` and `Resource=*` |
-| `restrict-cam-access-key-age` | advisory | Require CAM access keys to be rotated within the configured age |
+| `restrict-cam-policy-actions` | advisory | Block Tencent CAM allow statements with `action=*` and `resource=*` |
 
 ### Compute and Kubernetes
 
@@ -85,8 +84,7 @@ tencentcloud-sentinel-policies/
 
 | Policy | Enforcement | Description |
 |---|---|---|
-| `restrict-cos-acl` | **hard-mandatory** | Require private COS ACLs and reject public bucket-policy principals |
-| `restrict-cos-public-access` | **hard-mandatory** | Require COS public-access blocking |
+| `restrict-cos-acl` | **hard-mandatory** | Require private COS ACLs |
 | `restrict-cos-bucket-policy` | **hard-mandatory** | Reject wildcard or anonymous COS bucket-policy principals |
 | `require-cos-encryption` | advisory | Require COS server-side encryption |
 | `require-cos-versioning` | advisory | Require COS object versioning |
@@ -98,18 +96,18 @@ tencentcloud-sentinel-policies/
 | Policy | Enforcement | Description |
 |---|---|---|
 | `restrict-cdb-public-access` | **hard-mandatory** | Prevent public internet access to CDB instances |
-| `require-cdb-audit-log` | advisory | Require CDB audit logging |
-| `require-cdb-backup-retention` | advisory | Require a minimum backup retention period |
-| `require-cdb-deletion-protection` | advisory | Require deletion protection on CDB instances |
+| `require-cdb-audit-log` | advisory | Validate declared MySQL audit-service resources and retention |
+| `require-cdb-backup-retention` | advisory | Validate declared MySQL backup-policy retention |
+| `require-cdb-deletion-protection` | advisory | Prevent CDB `force_delete=true` from bypassing recycle-bin recovery |
 | `require-kms-key-rotation` | advisory | Require automatic KMS key rotation |
 
 ## Test Results
 
-The repository contains **25 policies and 50 pass/fail test cases**. The complete suite passes with Sentinel 0.41.0:
+The repository contains **23 policies and 48 pass/fail test cases**. The complete suite passes with Sentinel 0.41.0:
 
 ```text
-25 policies PASS
-50 test cases PASS
+23 policies PASS
+48 test cases PASS
 0 policy failures
 ```
 
@@ -123,7 +121,7 @@ test/<policy>/
 └── mock-tfplan-fail[-scenario].sentinel
 ```
 
-The provider-version policy uses `mock-tfconfig-*.sentinel` because it evaluates the `tfconfig/v2` import.
+The provider-version policy uses `mock-tfconfig-*.sentinel` because it evaluates the `tfconfig/v2` import. Provider attributes and resource mappings are tracked in [`docs/schema-verification.md`](docs/schema-verification.md).
 
 ## Prerequisites
 
@@ -176,8 +174,8 @@ policy "restrict-cvm-instance-type" {
 | `restrict-cvm-image-source` | `allowed_image_prefixes` |
 | `restrict-tke-cluster` | `min_kubernetes_version`, `allowed_network_types` |
 | `require-cdb-backup-retention` | `min_backup_retention_days` |
+| `require-cdb-audit-log` | `min_audit_log_retention_days` |
 | `restrict-cam-policy-actions` | `forbidden_wildcard` |
-| `restrict-cam-access-key-age` | `max_key_age_days` |
 | `require-kms-key-rotation` | none |
 | `require-provider-version-constraint` | none |
 | `prevent-resource-destruction` | `protected_tags` |

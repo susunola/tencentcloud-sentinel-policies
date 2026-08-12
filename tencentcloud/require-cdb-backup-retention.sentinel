@@ -1,17 +1,18 @@
 # require-cdb-backup-retention
-# Requires a minimum backup retention period on every TencentDB MySQL instance.
+# Requires every declared MySQL backup-policy resource to retain backups for
+# at least the configured period. The provider models this as a separate
+# tencentcloud_mysql_backup_policy resource.
 
 import "tfplan-functions" as plan
 
 param min_backup_retention_days default 7
 
-allDatabases = plan.find_resources("tencentcloud_mysql_instance")
+allBackupPolicies = plan.find_resources("tencentcloud_mysql_backup_policy")
 violations = {}
-
-for allDatabases as address, database {
-	backup_retention_period = plan.evaluate_attribute(database, "backup_retention_period") else null
-	if backup_retention_period is null or backup_retention_period < min_backup_retention_days {
-		msg = address + " has backup retention of " + string(backup_retention_period) +
+for allBackupPolicies as address, backup_policy {
+	retention_period = plan.evaluate_attribute(backup_policy, "retention_period") else null
+	if retention_period is null or retention_period < min_backup_retention_days {
+		msg = address + " has backup retention of " + string(retention_period) +
 			" days; at least " +
 			string(min_backup_retention_days) +
 			" days are required."

@@ -1,9 +1,6 @@
 # restrict-cam-policy-actions
-# Prevents an Allow statement from granting every CAM action on every resource.
-# TencentCloud CAM policies use the JSON document attribute. The parsed check
-# handles both string and list forms of Action and Resource. If the document
-# cannot be parsed, the fallback is intentionally conservative and may flag a
-# document when the relevant wildcard tokens occur anywhere in it.
+# Blocks Tencent Cloud CAM policies that grant every action on every resource.
+# CAM documents use lower-case keys and effect values, unlike AWS IAM JSON.
 
 import "tfplan-functions" as plan
 import "json"
@@ -26,11 +23,10 @@ statement_is_forbidden = func(statement) {
 		return false
 	}
 
-	effect = statement["Effect"] else null
-	actions = statement["Action"] else null
-	resources = statement["Resource"] else null
-
-	return effect is "Allow" and has_wildcard(actions) and has_wildcard(resources)
+	effect = statement["effect"] else ""
+	actions = statement["action"] else []
+	resources = statement["resource"] else []
+	return effect is "allow" and has_wildcard(actions) and has_wildcard(resources)
 }
 
 policy_has_forbidden_statement = func(document) {
@@ -38,7 +34,7 @@ policy_has_forbidden_statement = func(document) {
 		return false
 	}
 
-	statements = document["Statement"] else null
+	statements = document["statement"] else []
 	if types.type_of(statements) is "map" {
 		return statement_is_forbidden(statements)
 	}
@@ -54,30 +50,20 @@ policy_has_forbidden_statement = func(document) {
 
 allPolicies = plan.find_resources("tencentcloud_cam_policy")
 violations = {}
-
 for allPolicies as address, policy {
 	policy_document = plan.evaluate_attribute(policy, "document") else null
 	parsed_document = null
 	parsed_successfully = false
-	fallback_violation = false
 
 	if types.type_of(policy_document) is "string" {
 		parsed_document = json.unmarshal(policy_document) else null
 		parsed_successfully = types.type_of(parsed_document) is "map"
-		fallback_violation = policy_document contains "\"Allow\"" and
-			policy_document contains "\"Action\"" and
-			policy_document contains "\"Resource\"" and
-			policy_document contains "\"*\""
 	}
 
 	violates = parsed_successfully and policy_has_forbidden_statement(parsed_document)
-	if not parsed_successfully {
-		violates = fallback_violation
-	}
-
 	if forbidden_wildcard and violates {
-		msg = address + " contains an Allow statement with Action=* and " +
-			"Resource=*. CAM policies must scope both actions and resources."
+		msg = address + " contains a CAM allow statement with action=* and " +
+			"resource=*. Scope both actions and resources."
 		violations[address] = msg
 		print(msg)
 	}

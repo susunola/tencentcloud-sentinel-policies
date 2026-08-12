@@ -5,7 +5,7 @@ resource_changes = {
     "change": {
       "actions": ["create"],
       "after": {
-        "deletion_protection": true,
+        "delete_protect": true,
       },
     },
   },

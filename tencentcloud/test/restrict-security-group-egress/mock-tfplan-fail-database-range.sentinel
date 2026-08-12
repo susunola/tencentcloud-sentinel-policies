@@ -1,5 +1,5 @@
 resource_changes = {
-  "tencentcloud_security_group.web": {
+  "tencentcloud_security_group.database": {
     "mode": "managed",
     "type": "tencentcloud_security_group",
     "change": {
@@ -7,16 +7,10 @@ resource_changes = {
       "after": {
         "egress": [
           {
-            "cidr_block": "10.0.0.0/8",
-            "protocol": "TCP",
-            "port": "3306",
-            "action": "ACCEPT",
-          },
-          {
             "cidr_block": "0.0.0.0/0",
             "protocol": "TCP",
-            "port": "3306",
-            "action": "DROP",
+            "port": "3300-3400",
+            "action": "ACCEPT",
           },
         ],
       },

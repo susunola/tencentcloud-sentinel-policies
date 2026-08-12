@@ -2,18 +2,18 @@ module "tfplan-functions" {
   source = "../../../common-functions/tfplan-functions/tfplan-functions.sentinel"
 }
 
-param "max_key_age_days" {
-  value = 90
+module "tencentcloud-functions" {
+  source = "../../tencentcloud-functions/tencentcloud-functions.sentinel"
 }
 
 mock "tfplan/v2" {
   module {
-    source = "./mock-tfplan-pass.sentinel"
+    source = "./mock-tfplan-fail-range.sentinel"
   }
 }
 
 test {
   rules = {
-    main = true
+    main = false
   }
 }

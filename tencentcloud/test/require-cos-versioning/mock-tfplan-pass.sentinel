@@ -5,7 +5,19 @@ resource_changes = {
     "change": {
       "actions": ["create"],
       "after": {
-        "versioning_enabled": true,
+        "bucket": "primary-1258798060",
+        "versioning_enable": true,
+      },
+    },
+  },
+  "tencentcloud_cos_bucket_version.replica": {
+    "mode": "managed",
+    "type": "tencentcloud_cos_bucket_version",
+    "change": {
+      "actions": ["create"],
+      "after": {
+        "bucket": "versioned-1258798060",
+        "status": "Enabled",
       },
     },
   },

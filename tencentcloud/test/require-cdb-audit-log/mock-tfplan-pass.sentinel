@@ -1,11 +1,13 @@
 resource_changes = {
-  "tencentcloud_mysql_instance.example": {
+  "tencentcloud_mysql_audit_service.example": {
     "mode": "managed",
-    "type": "tencentcloud_mysql_instance",
+    "type": "tencentcloud_mysql_audit_service",
     "change": {
       "actions": ["create"],
       "after": {
-        "audit_log_enabled": true,
+        "instance_id": "cdb-example",
+        "audit_all": true,
+        "log_expire_day": 30,
       },
     },
   },

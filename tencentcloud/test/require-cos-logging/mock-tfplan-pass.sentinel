@@ -5,7 +5,8 @@ resource_changes = {
     "change": {
       "actions": ["create"],
       "after": {
-        "log_set_id": "ls-123456",
+        "log_enable": true,
+        "log_target_bucket": "cos-access-log-1258798060",
       },
     },
   },

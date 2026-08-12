@@ -5,7 +5,7 @@ resource_changes = {
     "change": {
       "actions": ["create"],
       "after": {
-        "policy": "{\"Principal\": \"qcs::cam::uin/100000000001\"}",
+        "policy": "{\"version\":\"2.0\",\"Statement\":[{\"Principal\":{\"qcs\":[\"qcs::cam::uin/100000000001:uin/100000000001\"]},\"Effect\":\"Allow\",\"Action\":[\"name/cos:GetObject\"],\"Resource\":[\"qcs::cos:ap-guangzhou:uid/1250000000:bucket-1250000000/*\"]}]}",
       },
     },
   },

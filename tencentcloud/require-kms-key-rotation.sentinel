@@ -1,18 +1,17 @@
 # require-kms-key-rotation
-# Requires all KMS keys to have automatic key rotation enabled.
-# Rotating encryption keys regularly limits the blast radius of a key
-# compromise and is required by most compliance frameworks.
+# Requires automatic rotation for symmetric Tencent KMS encryption keys.
+# Rotation is not applicable to asymmetric signing/decryption keys.
 
 import "tfplan-functions" as plan
 
 allKeys = plan.find_resources("tencentcloud_kms_key")
-
 violations = {}
 for allKeys as address, key {
-	rotation = plan.evaluate_attribute(key, "key_rotation_enabled") else null
-	if rotation is null or rotation is not true {
-		msg = address + " does not have automatic key rotation enabled " +
-			"(key_rotation_enabled=true). All KMS keys must rotate automatically."
+	key_usage = plan.evaluate_attribute(key, "key_usage") else null
+	rotation = plan.evaluate_attribute(key, "key_rotation_enabled") else false
+	if (key_usage is null or key_usage is "ENCRYPT_DECRYPT") and rotation is not true {
+		msg = address + " does not have automatic rotation enabled for its " +
+			"symmetric encryption key. Set key_rotation_enabled=true."
 		violations[address] = msg
 		print(msg)
 	}

@@ -5,7 +5,8 @@ resource_changes = {
     "change": {
       "actions": ["create"],
       "after": {
-        "versioning_enabled": false,
+        "bucket": "unversioned-1258798060",
+        "versioning_enable": false,
       },
     },
   },

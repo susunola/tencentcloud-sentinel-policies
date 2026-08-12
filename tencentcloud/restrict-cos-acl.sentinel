@@ -1,64 +1,18 @@
-# restrict-cos-security
-# Comprehensive COS bucket security policy covering:
-#   1. ACL must be private (legacy but still enforced)
-#   2. public_access_block must be enabled (modern Tencent Cloud standard)
-#   3. bucket_policy must not allow public access
-#
-# Reference: AWS S3 Block Public Access + bucket policy patterns
-# from hashicorp/terraform-sentinel-policies
+# restrict-cos-acl
+# Requires the Tencent Cloud COS bucket ACL to remain private.
+# Public bucket-policy principals are checked separately by
+# restrict-cos-bucket-policy; COS has no AWS-style public_access_block argument.
 
 import "tfplan-functions" as plan
 
 allBuckets = plan.find_resources("tencentcloud_cos_bucket")
-
 violations = {}
-
-# --- Check 1: ACL must be private ---
 for allBuckets as address, bucket {
-	acl = plan.evaluate_attribute(bucket, "acl") else null
-	if acl is not null and acl is not "private" {
+	acl = plan.evaluate_attribute(bucket, "acl") else "private"
+	if acl is not "private" {
 		msg = address + " has ACL '" + acl + "'. COS bucket ACL must be 'private'."
-		violations[address + ":acl"] = msg
+		violations[address] = msg
 		print(msg)
-	}
-}
-
-# --- Check 2: public_access_block must be enabled ---
-# Tencent Cloud COS supports public_access_block to override ACL/bucket-policy.
-# This is the modern standard (equivalent to AWS S3 Block Public Access).
-for allBuckets as address, bucket {
-	pab = plan.evaluate_attribute(bucket, "public_access_block") else null
-	if pab is not null {
-		# If public_access_block is configured, verify it's restrictive
-		block_public_acls = plan.evaluate_attribute(bucket, "public_access_block.block_public_acls") else null
-		block_public_policy = plan.evaluate_attribute(bucket, "public_access_block.block_public_policy") else null
-		if block_public_acls is not true or block_public_policy is not true {
-			msg = address + " has public_access_block but it does not block " +
-				"public ACLs and public policies. Set block_public_acls=true " +
-				"and block_public_policy=true."
-			violations[address + ":pab"] = msg
-			print(msg)
-		}
-	}
-	# If public_access_block is not set at all, we rely on ACL check (Check 1)
-}
-
-# --- Check 3: bucket_policy must not allow public access ---
-allBucketPolicies = plan.find_resources("tencentcloud_cos_bucket_policy")
-
-for allBucketPolicies as address, bp {
-	policy_json = plan.evaluate_attribute(bp, "policy") else ""
-	if policy_json is not "" {
-		# Check for public principals in bucket policy
-		if policy_json contains "\"Principal\": \"*\"" or
-			policy_json contains "\"Principal\":\"*\"" or
-			policy_json contains "qcs::cam::anyone" or
-			policy_json contains "*anonymous*" {
-			msg = address + " has a bucket policy that may allow public access. " +
-				"Bucket policies must not use wildcard principals or anonymous access."
-			violations[address + ":policy"] = msg
-			print(msg)
-		}
 	}
 }
 

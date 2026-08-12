@@ -1,37 +1,29 @@
 # restrict-security-group-cidr
-# Blocks security group rules that open ports to 0.0.0.0/0 (the entire internet).
-# SSH (22), RDP (3389), MySQL (3306), Redis (6379), and MongoDB (27017)
-# are especially dangerous when exposed globally.
-#
-# Customize forbidden_ports and/or remove 0.0.0.0/0 from allow_unrestricted
-# to fit your organization's policy.
+# Blocks ACCEPT rules that expose critical ports to the public internet.
+# Tencent Cloud security-group port values are strings and may be single ports,
+# comma-separated ports, ranges, or all. The shared helper parses all forms.
 
 import "tencentcloud-functions" as tc
-import "strings"
 
-# Ports that must NEVER be opened to 0.0.0.0/0
 param forbidden_ports default [22, 3389, 3306, 6379, 27017, 5432]
-
-# CIDRs that are considered unrestricted
 param unrestricted_cidrs default ["0.0.0.0/0", "::/0"]
 
 all_rules = tc.find_security_group_rules()
-
 violations = {}
 for all_rules as key, sg_rule {
 	cidr = sg_rule.cidr_block else null
 	port = sg_rule.port else null
+	action = sg_rule.action else "ACCEPT"
 
-	if cidr in unrestricted_cidrs {
-		if port in forbidden_ports {
-			protocol = tc.port_to_scheme(port)
-			msg = key + " allows " + protocol + " (" + string(port) +
-				") from " +
-				cidr +
-				" - this is a critical security risk"
-			violations[key] = msg
-			print(msg)
-		}
+	if action is "ACCEPT" and cidr in unrestricted_cidrs and
+		tc.port_matches_any(port, forbidden_ports) {
+		msg = key + " allows " + tc.port_to_scheme(port) + " (" +
+			string(port) +
+			") from " +
+			cidr +
+			" - this is a critical security risk"
+		violations[key] = msg
+		print(msg)
 	}
 }
 

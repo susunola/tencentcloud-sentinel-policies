@@ -1,22 +1,65 @@
 # restrict-cos-bucket-policy
-# Prevents COS bucket policies from granting access to public principals.
+# Prevents COS bucket policies from allowing anonymous/public principals.
+# Tencent COS represents anonymous users as "*" or
+# qcs::cam::anyone:anyone in the Principal field.
 
 import "tfplan-functions" as plan
+import "json"
+import "types"
+
+principal_is_public = func(principal) {
+	if types.type_of(principal) is "string" {
+		return principal is "*" or principal contains "anyone"
+	}
+	if types.type_of(principal) is "list" {
+		for principal as principal_value {
+			if string(principal_value) is "*" or string(principal_value) contains "anyone" {
+				return true
+			}
+		}
+	}
+	if types.type_of(principal) is "map" {
+		qcs = principal["qcs"] else []
+		return principal_is_public(qcs)
+	}
+	return false
+}
+
+statement_is_public = func(statement) {
+	if types.type_of(statement) is not "map" {
+		return false
+	}
+	principal = statement["Principal"] else statement["principal"] else null
+	effect = statement["Effect"] else statement["effect"] else ""
+	return (effect is "Allow" or effect is "allow") and principal_is_public(principal)
+}
+
+policy_is_public = func(document) {
+	if types.type_of(document) is not "map" {
+		return false
+	}
+	statements = document["Statement"] else document["statement"] else []
+	if types.type_of(statements) is "map" {
+		return statement_is_public(statements)
+	}
+	if types.type_of(statements) is "list" {
+		for statements as statement {
+			if statement_is_public(statement) {
+				return true
+			}
+		}
+	}
+	return false
+}
 
 allBucketPolicies = plan.find_resources("tencentcloud_cos_bucket_policy")
 violations = {}
-
 for allBucketPolicies as address, bucket_policy {
 	policy_json = plan.evaluate_attribute(bucket_policy, "policy") else ""
-	has_wildcard_principal = policy_json contains "\"Principal\": \"*\"" or
-		policy_json contains "\"Principal\":\"*\"" or
-		policy_json contains "\"principal\": \"*\"" or
-		policy_json contains "\"principal\":\"*\""
-	has_public_qcs_principal = policy_json contains "qcs::cam::anyone"
-
-	if has_wildcard_principal or has_public_qcs_principal {
-		msg = address + " grants access to a public principal. " +
-			"COS bucket policies must not use wildcard principals or qcs::cam::anyone."
+	document = json.unmarshal(policy_json) else null
+	if policy_is_public(document) {
+		msg = address + " grants COS access to an anonymous principal. " +
+			"Use an explicit Tencent Cloud CAM principal and least-privilege scope."
 		violations[address] = msg
 		print(msg)
 	}

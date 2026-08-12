@@ -5,7 +5,7 @@ resource_changes = {
     "change": {
       "actions": ["create"],
       "after": {
-        "document": "{\"Statement\":[{\"Effect\":\"Allow\",\"Action\":[\"name:GetRole\"],\"Resource\":\"*\"}]}",
+        "document": "{\"version\":\"2.0\",\"statement\":[{\"effect\":\"allow\",\"action\":[\"name/GetRole\"],\"resource\":[\"qcs::cam::uin/100000000001:uin/100000000001\"]}]}",
       },
     },
   },

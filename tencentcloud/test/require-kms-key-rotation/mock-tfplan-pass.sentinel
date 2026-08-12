@@ -9,4 +9,15 @@ resource_changes = {
       },
     },
   },
+  "tencentcloud_kms_key.signing": {
+    "mode": "managed",
+    "type": "tencentcloud_kms_key",
+    "change": {
+      "actions": ["create"],
+      "after": {
+        "key_usage": "ASYMMETRIC_SIGN_VERIFY_SM2",
+        "key_rotation_enabled": false,
+      },
+    },
+  },
 }

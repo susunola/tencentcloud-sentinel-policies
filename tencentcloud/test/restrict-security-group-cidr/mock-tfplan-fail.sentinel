@@ -13,7 +13,7 @@ resource_changes = {
           {
             "cidr_block":  "0.0.0.0/0",
             "protocol":    "TCP",
-            "port":        22,
+            "port":        "22-23",
             "action":      "ACCEPT",
             "description": "SSH from anywhere - BAD!",
           },

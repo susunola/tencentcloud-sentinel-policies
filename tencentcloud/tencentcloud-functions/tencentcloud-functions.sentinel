@@ -1,14 +1,12 @@
 # Common functions for use with the TencentCloud provider
 # These helpers wrap common-functions with Tencent Cloud-specific
-# resource discovery and tag handling patterns.
+# resource discovery, tag handling, and security-group parsing.
 
 import "tfplan-functions" as plan
 import "tfplan/v2" as tfplan
 import "strings"
 
 ### find_resources_with_standard_tags ###
-# Find all TencentCloud resources that support tags (from the given list)
-# across all resource types the provider manages.
 find_resources_with_standard_tags = func(resource_types) {
 	resources = filter tfplan.resource_changes as address, rc {
 		rc.provider_name matches "(.*)tencentcloud$" and
@@ -22,14 +20,9 @@ find_resources_with_standard_tags = func(resource_types) {
 }
 
 ### find_security_group_rules ###
-# Extract security group rule blocks from a tencentcloud_security_group
-# or tencentcloud_security_group_rule_set resource.
-# Returns a flat list of ingress/egress rule objects with their parent
-# security group address.
 find_security_group_rules = func() {
 	rules = {}
 
-	# Handle tencentcloud_security_group (inline rules)
 	sgs = plan.find_resources("tencentcloud_security_group")
 	for sgs as address, sg {
 		ingress = plan.find_blocks(sg, "ingress")
@@ -46,7 +39,6 @@ find_security_group_rules = func() {
 		}
 	}
 
-	# Handle tencentcloud_security_group_rule_set (standalone rules)
 	rule_sets = plan.find_resources("tencentcloud_security_group_rule_set")
 	for rule_sets as address, rs {
 		ingress_rules = plan.find_blocks(rs, "ingress")
@@ -66,16 +58,56 @@ find_security_group_rules = func() {
 	return rules
 }
 
-### find_clb_listeners ###
-# Extract CLB listener blocks from tencentcloud_clb_listener resources.
-find_clb_listeners = func() {
-	listeners = plan.find_resources("tencentcloud_clb_listener")
-	return listeners
+### port_matches ###
+# Tencent Cloud security-group ports are strings: all, 22, 22,80, or 20-30.
+# This helper returns true when one declared token contains target_port.
+port_matches = func(port_value, target_port) {
+	if port_value is null {
+		return false
+	}
+
+	port_text = string(port_value)
+	if port_text is "all" or port_text is "ALL" {
+		return true
+	}
+
+	matched = false
+	port_tokens = strings.split(port_text, ",")
+	for port_tokens as _, token {
+		if token is string(target_port) {
+			matched = true
+		}
+
+		range_parts = strings.split(token, "-")
+		if length(range_parts) is 2 {
+			start_port = int(range_parts[0])
+			end_port = int(range_parts[1])
+			if target_port >= start_port and target_port <= end_port {
+				matched = true
+			}
+		}
+	}
+	return matched
+}
+
+port_matches_any = func(port_value, target_ports) {
+	if port_value is null {
+		return true
+	}
+	if string(port_value) is "all" or string(port_value) is "ALL" {
+		return true
+	}
+
+	matched = false
+	for target_ports as _, target_port {
+		if port_matches(port_value, target_port) {
+			matched = true
+		}
+	}
+	return matched
 }
 
 ### validate_cidr_not_open ###
-# Check if a CIDR value is "0.0.0.0/0" (open to the world).
-# Returns true if the CIDR is safe (not open).
 validate_cidr_not_open = func(cidr) {
 	if cidr is null {
 		return false
@@ -84,7 +116,6 @@ validate_cidr_not_open = func(cidr) {
 }
 
 ### port_to_scheme ###
-# Map common port numbers to their protocol names for readable messages.
 port_to_scheme = func(port) {
 	case string(port) {
 		when "22":

@@ -1,16 +1,17 @@
 # require-cdb-deletion-protection
-# Requires deletion protection on every TencentDB MySQL instance.
+# Prevents direct deletion of MySQL instances. Tencent Cloud's provider
+# exposes force_delete: true bypasses the recycle bin and is not a generic
+# deletion_protection flag.
 
 import "tfplan-functions" as plan
 
 allDatabases = plan.find_resources("tencentcloud_mysql_instance")
 violations = {}
-
 for allDatabases as address, database {
-	deletion_protection = plan.evaluate_attribute(database, "deletion_protection") else null
-	if deletion_protection is null or deletion_protection is not true {
-		msg = address + " does not enable CDB deletion protection. " +
-			"Set deletion_protection=true."
+	force_delete = plan.evaluate_attribute(database, "force_delete") else false
+	if force_delete is true {
+		msg = address + " enables force_delete=true. " +
+			"Production MySQL instances must retain the recycle-bin recovery path."
 		violations[address] = msg
 		print(msg)
 	}

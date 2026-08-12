@@ -1,16 +1,23 @@
 # require-cdb-audit-log
-# Requires audit logging on every TencentDB MySQL instance.
+# Requires every declared MySQL audit-service resource to record audit events
+# and retain them for at least the configured period. The provider models this
+# as a separate tencentcloud_mysql_audit_service resource, not an attribute on
+# tencentcloud_mysql_instance.
 
 import "tfplan-functions" as plan
 
-allDatabases = plan.find_resources("tencentcloud_mysql_instance")
-violations = {}
+param min_audit_log_retention_days default 30
 
-for allDatabases as address, database {
-	audit_log_enabled = plan.evaluate_attribute(database, "audit_log_enabled") else null
-	if audit_log_enabled is null or audit_log_enabled is not true {
-		msg = address + " does not enable the CDB audit log. " +
-			"Set audit_log_enabled=true."
+allAuditServices = plan.find_resources("tencentcloud_mysql_audit_service")
+violations = {}
+for allAuditServices as address, audit_service {
+	audit_all = plan.evaluate_attribute(audit_service, "audit_all") else false
+	log_expire_day = plan.evaluate_attribute(audit_service, "log_expire_day") else null
+	if audit_all is not true or log_expire_day is null or
+		log_expire_day < min_audit_log_retention_days {
+		msg = address + " does not provide full MySQL audit coverage with " +
+			string(min_audit_log_retention_days) +
+			" days of retention."
 		violations[address] = msg
 		print(msg)
 	}

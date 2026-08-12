@@ -5,7 +5,8 @@ resource_changes = {
     "change": {
       "actions": ["create"],
       "after": {
-        "log_set_id": "",
+        "log_enable": false,
+        "log_target_bucket": "",
       },
     },
   },
