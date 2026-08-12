@@ -1,0 +1,46 @@
+# restrict-cvm-image-source
+# Restricts CVM instances to only use approved image sources.
+# Custom or shared images that do not match an approved prefix are blocked,
+# ensuring instances are built from vetted, organization-approved images.
+#
+# Customize allowed_image_prefixes to match your approved image IDs.
+
+import "tfplan-functions" as plan
+import "strings"
+
+# Prefixes that approved image IDs must start with
+param allowed_image_prefixes default ["img-"]
+
+allInstances = plan.find_resources("tencentcloud_instance")
+
+violations = {}
+for allInstances as address, instance {
+	image_id = plan.evaluate_attribute(instance, "image_id") else null
+	if image_id is null {
+		msg = address + " does not specify an image_id. " +
+			"All CVM instances must use an approved image."
+		violations[address] = msg
+		print(msg)
+	} else {
+		allowed = false
+		for allowed_image_prefixes as prefix {
+			if strings.has_prefix(image_id, prefix) {
+				allowed = true
+			}
+		}
+		if not allowed {
+			msg = address + " uses image " + image_id +
+				" which does not match any approved image prefix " +
+				"(allowed: " +
+				strings.join(allowed_image_prefixes, ", ") +
+				"). " +
+				"Only images from approved sources may be used."
+			violations[address] = msg
+			print(msg)
+		}
+	}
+}
+
+main = rule {
+	length(violations) is 0
+}

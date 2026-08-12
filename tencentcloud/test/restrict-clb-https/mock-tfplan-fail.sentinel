@@ -1,0 +1,12 @@
+resource_changes = {
+  "tencentcloud_clb_listener.http": {
+    "mode": "managed",
+    "type": "tencentcloud_clb_listener",
+    "change": {
+      "actions": ["create"],
+      "after": {
+        "protocol": "HTTP",
+      },
+    },
+  },
+}

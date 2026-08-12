@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-08-12
+
+Expanded the policy library using patterns from the HashiCorp AWS, Azure, GCP and cloud-agnostic libraries, plus Tencent Cloud/CIS security guidance.
+
+### Added
+
+- CAM wildcard policy-action control and access-key age control
+- COS public-access, bucket-policy, versioning and logging controls
+- CDB audit logging, backup retention and deletion protection controls
+- CLB HTTPS and deletion-protection controls
+- CVM image-source control
+- Security-group egress control
+- KMS key-rotation control
+- Provider version-constraint control
+- Generic protected-resource destruction control
+- Pass/fail fixtures for all policies
+
+### Changed
+
+- Reworked `restrict-cos-acl` to also detect public bucket-policy principals
+- Parameterized TKE minimum Kubernetes version and allowed network plugins
+- Removed `restrict-vpc-cidr`, `validate-provider-regions` and the invalid CVM deletion policy
+- Updated the bilingual README files with the complete policy matrix and design references
+- Fixed tfconfig helper parsing and Sentinel 0.41.0 compatibility issues
+
+### Validation
+
+- 25 policies
+- 50 pass/fail test cases
+- Full Sentinel test suite passes with Sentinel 0.41.0
+
 ## [0.1.0] - 2026-08-11
 
 Initial public release.
@@ -12,29 +43,10 @@ Initial public release.
 ### Added
 
 - Common helper functions for `tfplan/v2` and `tfconfig/v2` imports
-  (`common-functions/`)
-- Tencent Cloud specific helpers: resource tag discovery, security group rule
-  extraction, CIDR validation (`tencentcloud-functions/`)
-- 12 Sentinel policies covering compute, storage, network, database and
-  Kubernetes:
-  - `restrict-cvm-instance-type` — limit CVM to approved instance types
-  - `enforce-mandatory-tags` — require standard tags on key resources
-  - `restrict-security-group-cidr` — block 0.0.0.0/0 on critical ports
-  - `require-cos-encryption` — enforce COS server-side encryption
-  - `restrict-cos-acl` — enforce private COS bucket ACL
-  - `restrict-clb-access-log` — enforce CLB access logging
-  - `restrict-cdb-public-access` — deny public database exposure
-  - `validate-provider-regions` — restrict provider to approved regions
-  - `protect-against-cvm-deletion` — require termination protection
-  - `restrict-vpc-cidr` — enforce RFC 1918 CIDR ranges
-  - `require-cbs-encryption` — enforce CBS disk encryption
-  - `restrict-tke-cluster` — enforce VPC-CNI and minimum K8s version
-- 8 test cases (pass/fail) for 4 policies with mock Terraform plan data
-- Policy set configuration (`sentinel.hcl`) with enforcement levels
-- Bilingual documentation: `README.md` (EN) and `README.zh-CN.md` (ZH)
-- CI workflow: Sentinel fmt + test on every PR and push to main
-- Contribution, security and ownership documents (`CONTRIBUTING.md`,
-  `SECURITY.md`, `CODEOWNERS`)
-- Editor configuration (`.editorconfig`)
+- Tencent Cloud-specific helper functions
+- Initial Tencent Cloud policy set and test fixtures
+- Policy set configuration, bilingual documentation and CI workflow
+- Contribution, security and ownership documents
 
+[0.2.0]: https://github.com/susunola/tencentcloud-sentinel-policies/releases/tag/v0.2.0
 [0.1.0]: https://github.com/susunola/tencentcloud-sentinel-policies/releases/tag/v0.1.0

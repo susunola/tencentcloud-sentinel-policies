@@ -1,0 +1,12 @@
+resource_changes = {
+  "tencentcloud_mysql_instance.example": {
+    "mode": "managed",
+    "type": "tencentcloud_mysql_instance",
+    "change": {
+      "actions": ["create"],
+      "after": {
+        "deletion_protection": true,
+      },
+    },
+  },
+}

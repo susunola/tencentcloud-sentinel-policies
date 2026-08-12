@@ -1,0 +1,21 @@
+# require-cdb-deletion-protection
+# Requires deletion protection on every TencentDB MySQL instance.
+
+import "tfplan-functions" as plan
+
+allDatabases = plan.find_resources("tencentcloud_mysql_instance")
+violations = {}
+
+for allDatabases as address, database {
+	deletion_protection = plan.evaluate_attribute(database, "deletion_protection") else null
+	if deletion_protection is null or deletion_protection is not true {
+		msg = address + " does not enable CDB deletion protection. " +
+			"Set deletion_protection=true."
+		violations[address] = msg
+		print(msg)
+	}
+}
+
+main = rule {
+	length(violations) is 0
+}

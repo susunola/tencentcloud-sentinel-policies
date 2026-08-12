@@ -1,0 +1,12 @@
+resource_changes = {
+  "tencentcloud_clb_instance.example": {
+    "mode": "managed",
+    "type": "tencentcloud_clb_instance",
+    "change": {
+      "actions": ["create"],
+      "after": {
+        "deletion_protection": true,
+      },
+    },
+  },
+}

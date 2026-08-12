@@ -1,0 +1,21 @@
+# restrict-cos-public-access
+# Requires COS buckets to enable the public access block.
+
+import "tfplan-functions" as plan
+
+allBuckets = plan.find_resources("tencentcloud_cos_bucket")
+violations = {}
+
+for allBuckets as address, bucket {
+	public_access_block = plan.evaluate_attribute(bucket, "public_access_block") else null
+	if public_access_block is null or public_access_block is not true {
+		msg = address + " does not enable public access blocking. " +
+			"Set public_access_block=true on every COS bucket."
+		violations[address] = msg
+		print(msg)
+	}
+}
+
+main = rule {
+	length(violations) is 0
+}

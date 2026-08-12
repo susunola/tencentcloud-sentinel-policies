@@ -6,97 +6,130 @@
 # Tencent Cloud Sentinel Policies
 
 [![License](https://img.shields.io/badge/license-MPL--2.0-blue.svg)](LICENSE)
-[![Sentinel](https://img.shields.io/badge/sentinel-%3E%3D0.26.0-844FBA)](https://developer.hashicorp.com/sentinel/downloads)
+[![Sentinel](https://img.shields.io/badge/sentinel-%3E%3D0.41.0-844FBA)](https://developer.hashicorp.com/sentinel/downloads)
+[![Tests](https://img.shields.io/badge/tests-50%20passing-brightgreen.svg)](#test-results)
 
-HashiCorp Sentinel policies for Tencent Cloud infrastructure governance — enforce security, compliance, and operational best practices for resources managed by the [TencentCloud Terraform Provider](https://registry.terraform.io/providers/tencentcloudstack/tencentcloud).
+HashiCorp Sentinel policies for Tencent Cloud infrastructure governance. The policies are designed for resources managed by the [TencentCloud Terraform Provider](https://registry.terraform.io/providers/tencentcloudstack/tencentcloud), with controls inspired by the official HashiCorp AWS, Azure, GCP and cloud-agnostic policy libraries, CIS Tencent Cloud guidance, and common cloud security practices.
+
+> This is a community policy library, not a complete compliance certification. Review every control against your architecture, provider version, business requirements and applicable regulatory standard before enforcing it in production.
 
 ## Approach
 
-These policies use **Route A** (built-in imports) — no custom Sentinel plugin required. All data comes from the `tfplan/v2` and `tfconfig/v2` imports that ship with Terraform Cloud/Enterprise. The `common-functions/` helpers wrap these imports so policy authors write readable, intent-driven rules instead of raw data traversal.
+These policies use **Route A** (built-in imports) — no custom Sentinel SDK plugin is required. Data comes from the Terraform Cloud/Enterprise `tfplan/v2` and `tfconfig/v2` imports. The reusable modules under `common-functions/` keep policy code focused on intent rather than raw import traversal.
 
 ```
-Policy (restrict-cvm-instance-type.sentinel)
+Policy
   │
-  ├── import "tfplan-functions" as plan
-  │     └── common-functions/tfplan-functions/
-  │           └── wrap tfplan/v2 (built-in, no plugin)
+  ├── tfplan/v2 ── common-functions/tfplan-functions/
+  │                └── resource changes and planned values
   │
-  └── import "tencentcloud-functions" as tc
-        └── tencentcloud/tencentcloud-functions/
-              └── Tencent Cloud resource discovery helpers
+  ├── tfconfig/v2 ─ common-functions/tfconfig-functions/
+  │                 └── provider and configuration checks
+  │
+  └── tencentcloud-functions/
+                     └── Tencent Cloud resource and security-group helpers
 ```
 
 ## Structure
 
 ```
 tencentcloud-sentinel-policies/
-├── common-functions/           # Reusable Sentinel modules
-│   ├── tfplan-functions/       # tfplan/v2 import helpers
-│   └── tfconfig-functions/     # tfconfig/v2 import helpers
-├── tencentcloud/               # Tencent Cloud policy set
+├── common-functions/
+│   ├── tfplan-functions/       # tfplan/v2 helpers
+│   └── tfconfig-functions/     # tfconfig/v2 helpers
+├── tencentcloud/
 │   ├── sentinel.hcl            # Policy set configuration
-│   ├── tencentcloud-functions/ # Tencent Cloud specific helpers
-│   │   └── tencentcloud-functions.sentinel
-│   ├── *.sentinel              # Individual policy files
-│   └── test/                   # Test cases (pass/fail mocks)
-└── README.md
+│   ├── tencentcloud-functions/ # Tencent Cloud-specific helpers
+│   ├── *.sentinel               # Policy files
+│   └── test/                    # Pass/fail tests and Sentinel mocks
+├── README.md
+└── README.zh-CN.md
 ```
 
 ## Policies
 
+### Governance and supply chain
+
+| Policy | Enforcement | Description |
+|---|---|---|
+| `enforce-mandatory-tags` | advisory | Require standard ownership and cost tags on key resources |
+| `require-provider-version-constraint` | advisory | Require a version constraint for the TencentCloud provider |
+| `prevent-resource-destruction` | **hard-mandatory** | Block deletion of resources marked as production or Terraform-managed |
+
+### Identity and access
+
+| Policy | Enforcement | Description |
+|---|---|---|
+| `restrict-cam-policy-actions` | advisory | Block CAM Allow statements with `Action=*` and `Resource=*` |
+| `restrict-cam-access-key-age` | advisory | Require CAM access keys to be rotated within the configured age |
+
+### Compute and Kubernetes
+
 | Policy | Enforcement | Description |
 |---|---|---|
 | `restrict-cvm-instance-type` | advisory | Limit CVM instances to approved instance types |
-| `enforce-mandatory-tags` | advisory | Require Owner, Environment, CostCenter, ManagedBy tags |
-| `restrict-security-group-cidr` | **hard-mandatory** | Block 0.0.0.0/0 on SSH(22), RDP(3389), MySQL(3306), Redis(6379), MongoDB(27017), PostgreSQL(5432) |
-| `require-cos-encryption` | advisory | All COS buckets must have server-side encryption |
-| `restrict-cos-acl` | **hard-mandatory** | COS bucket ACL must be "private" |
-| `restrict-clb-access-log` | advisory | CLB instances must enable access logging |
-| `restrict-cdb-public-access` | **hard-mandatory** | Database instances must not have public internet access |
-| `validate-provider-regions` | advisory | TencentCloud providers restricted to approved regions |
-| `protect-against-cvm-deletion` | advisory | Production CVM instances must enable termination protection |
-| `restrict-vpc-cidr` | advisory | VPC CIDR blocks must use RFC 1918 private ranges |
-| `require-cbs-encryption` | advisory | All CBS disks must be encrypted at rest |
-| `restrict-tke-cluster` | advisory | TKE clusters must use VPC-CNI, meet minimum version and allowed network plugins |
+| `restrict-cvm-image-source` | advisory | Limit CVM images to approved image-ID prefixes |
+| `restrict-tke-cluster` | advisory | Require VPC networking, a minimum Kubernetes version and an approved plugin |
+
+### Network and load balancing
+
+| Policy | Enforcement | Description |
+|---|---|---|
+| `restrict-security-group-cidr` | **hard-mandatory** | Block unrestricted ingress to critical ports |
+| `restrict-security-group-egress` | advisory | Block unrestricted egress to all ports or database ports |
+| `restrict-clb-https` | advisory | Require CLB listeners to use HTTPS rather than plain HTTP |
+| `restrict-clb-access-log` | advisory | Require CLB access logging |
+| `restrict-clb-deletion-protection` | advisory | Require deletion protection on CLB instances |
+
+### COS and storage
+
+| Policy | Enforcement | Description |
+|---|---|---|
+| `restrict-cos-acl` | **hard-mandatory** | Require private COS ACLs and reject public bucket-policy principals |
+| `restrict-cos-public-access` | **hard-mandatory** | Require COS public-access blocking |
+| `restrict-cos-bucket-policy` | **hard-mandatory** | Reject wildcard or anonymous COS bucket-policy principals |
+| `require-cos-encryption` | advisory | Require COS server-side encryption |
+| `require-cos-versioning` | advisory | Require COS object versioning |
+| `require-cos-logging` | advisory | Require COS access logging |
+| `require-cbs-encryption` | advisory | Require CBS disk encryption at rest |
+
+### Database and key management
+
+| Policy | Enforcement | Description |
+|---|---|---|
+| `restrict-cdb-public-access` | **hard-mandatory** | Prevent public internet access to CDB instances |
+| `require-cdb-audit-log` | advisory | Require CDB audit logging |
+| `require-cdb-backup-retention` | advisory | Require a minimum backup retention period |
+| `require-cdb-deletion-protection` | advisory | Require deletion protection on CDB instances |
+| `require-kms-key-rotation` | advisory | Require automatic KMS key rotation |
 
 ## Test Results
 
-```
-PASS - restrict-cvm-instance-type.sentinel
-  PASS - test/restrict-cvm-instance-type/fail.hcl    # disallowed instance type → violation ✓
-  PASS - test/restrict-cvm-instance-type/pass.hcl    # allowed types → no violation ✓
+The repository contains **25 policies and 50 pass/fail test cases**. The complete suite passes with Sentinel 0.41.0:
 
-PASS - restrict-security-group-cidr.sentinel
-  PASS - test/restrict-security-group-cidr/fail.hcl  # SSH open to 0.0.0.0/0 → violation ✓
-  PASS - test/restrict-security-group-cidr/pass.hcl  # internal CIDR only → clean ✓
-
-PASS - enforce-mandatory-tags.sentinel
-  PASS - test/enforce-mandatory-tags/fail-missing-tags.hcl  # missing tags → violation ✓
-  PASS - test/enforce-mandatory-tags/pass.hcl               # all tags present → clean ✓
-
-PASS - require-cos-encryption.sentinel
-  PASS - test/require-cos-encryption/fail.hcl  # no encryption → violation ✓
-  PASS - test/require-cos-encryption/pass.hcl  # SSE-COS enabled → clean ✓
+```text
+25 policies PASS
+50 test cases PASS
+0 policy failures
 ```
 
-### Test Layer
-
-Each policy has its own test directory with pass/fail scenarios:
+Each policy has an isolated test directory:
 
 ```
 test/<policy>/
-├── pass.hcl                          # Test config: expects main = true
-├── fail[-scenario].hcl               # Test config: expects main = false
-├── mock-tfplan-pass.sentinel         # Mock Terraform plan (compliant resources)
-└── mock-tfplan-fail[-scenario].sentinel  # Mock plan (non-compliant resources)
+├── pass.hcl
+├── fail[-scenario].hcl
+├── mock-tfplan-pass.sentinel
+└── mock-tfplan-fail[-scenario].sentinel
 ```
 
-Test mock data simulates real Terraform plans — the same `tfplan/v2` import structure you would see from `terraform show -json`.
+The provider-version policy uses `mock-tfconfig-*.sentinel` because it evaluates the `tfconfig/v2` import.
 
 ## Prerequisites
 
-- [Sentinel CLI](https://developer.hashicorp.com/sentinel/downloads) >= 0.26.0
-- Terraform >= 1.0 with [TencentCloud Provider](https://registry.terraform.io/providers/tencentcloudstack/tencentcloud)
+- [Sentinel CLI](https://developer.hashicorp.com/sentinel/downloads) 0.41.0 or compatible
+- Terraform with the [TencentCloud Provider](https://registry.terraform.io/providers/tencentcloudstack/tencentcloud)
+- Terraform Cloud or Terraform Enterprise for policy enforcement
 
 ## Quick Start
 
@@ -108,20 +141,21 @@ brew install hashicorp/tap/sentinel
 cd tencentcloud
 sentinel test -verbose
 
-# Test a single policy
-sentinel test restrict-cvm-instance-type -verbose
+# Test one policy
+sentinel test -run restrict-security-group-cidr -verbose
 ```
 
-### Usage in Terraform Cloud / Enterprise
+## Usage in Terraform Cloud / Enterprise
 
-1. Add this repository as a Policy Set in your TFC/TFE organization
-2. Set enforcement levels per policy (defaults are advisory — adjust in `sentinel.hcl`)
-3. Attach the policy set to workspaces using the TencentCloud provider
+1. Add this repository as a Policy Set in your HCP Terraform/TFE organization.
+2. Review the policy list and enforcement levels in `tencentcloud/sentinel.hcl`.
+3. Attach the Policy Set to workspaces that use the TencentCloud provider.
+4. Start with advisory enforcement in a non-production workspace, then promote controls after reviewing violations.
+5. Customize policy parameters for your organization and keep exceptions in code review.
 
-To customize parameters, override them in your policy set configuration:
+Example:
 
 ```hcl
-# Override allowed instance types for your organization
 policy "restrict-cvm-instance-type" {
   source            = "./tencentcloud/restrict-cvm-instance-type.sentinel"
   enforcement_level = "hard-mandatory"
@@ -131,39 +165,51 @@ policy "restrict-cvm-instance-type" {
 }
 ```
 
-## Customization
+## Key Parameters
 
-Each policy exposes `param` blocks that can be overridden at the policy-set level:
+| Policy | Parameters |
+|---|---|
+| `restrict-cvm-instance-type` | `allowed_types` |
+| `enforce-mandatory-tags` | `resource_types`, `mandatory_tags` |
+| `restrict-security-group-cidr` | `forbidden_ports`, `unrestricted_cidrs` |
+| `restrict-security-group-egress` | `forbidden_ports`, `unrestricted_cidrs` |
+| `restrict-cvm-image-source` | `allowed_image_prefixes` |
+| `restrict-tke-cluster` | `min_kubernetes_version`, `allowed_network_types` |
+| `require-cdb-backup-retention` | `min_backup_retention_days` |
+| `restrict-cam-policy-actions` | `forbidden_wildcard` |
+| `restrict-cam-access-key-age` | `max_key_age_days` |
+| `require-kms-key-rotation` | none |
+| `require-provider-version-constraint` | none |
+| `prevent-resource-destruction` | `protected_tags` |
 
-| Policy | Params | Default |
-|---|---|---|
-| `restrict-cvm-instance-type` | `allowed_types` | S5.MEDIUM4, S5.LARGE8, S5.2XLARGE16, S5.4XLARGE32, S6.MEDIUM4, S6.LARGE8, SA2.MEDIUM4, SA2.LARGE8, SA3.MEDIUM8, SA3.LARGE16 |
-| `enforce-mandatory-tags` | `resource_types`, `mandatory_tags` | CVM/COS/CLB/MySQL/VPC/CBS/TKE/Redis; Owner, Environment, CostCenter, ManagedBy |
-| `restrict-security-group-cidr` | `forbidden_ports`, `unrestricted_cidrs` | [22, 3389, 3306, 6379, 27017, 5432]; ["0.0.0.0/0", "::/0"] |
-| `validate-provider-regions` | `allowed_regions` | ap-guangzhou, ap-shanghai, ap-beijing, ap-singapore |
-| `restrict-tke-cluster` | `min_kubernetes_version`, `allowed_network_types` | 1.20; ["VPC-CNI"] |
-| `protect-against-cvm-deletion` | `protected_tag_key`, `protected_tag_value` | Environment; Production |
+## Design References
 
-## Relationship to Official Repo
+The policy design draws on:
 
-This repository follows the same structure and conventions as [hashicorp/terraform-sentinel-policies](https://github.com/hashicorp/terraform-sentinel-policies). The `common-functions/` modules are derived from that repository. The `tencentcloud/` directory is the Tencent Cloud equivalent of the `aws/` / `azure/` / `gcp/` directories in the official repo.
+- [HashiCorp Terraform Sentinel policy examples](https://developer.hashicorp.com/terraform/cloud-docs/sentinel/examples)
+- [HashiCorp Terraform operating guide for Sentinel](https://developer.hashicorp.com/validated-designs/terraform-operating-guides-standardization/policy-as-code-sentinel)
+- [HashiCorp terraform-sentinel-policies](https://github.com/hashicorp/terraform-sentinel-policies)
+- [CIS Tencent Cloud Benchmarks](https://www.cisecurity.org/benchmark/tencent)
+- Tencent Cloud security and compliance guidance
+
+The cross-cloud mappings are references for control intent, not claims that Tencent Cloud resources have identical semantics to AWS, Azure or GCP resources.
 
 ## Contributing
 
-1. Fork the repository
-2. Add or modify policies following the existing patterns
-3. Add `pass.hcl` and `fail-*.hcl` test cases with mock data
-4. Run `sentinel test` to verify
-5. Submit a pull request
+1. Fork the repository.
+2. Add or modify a policy following the existing naming and import patterns.
+3. Add both compliant and non-compliant tests with minimal mocks.
+4. Run `sentinel fmt` and `sentinel test -verbose`.
+5. Submit a pull request with the provider version and resource schema used.
 
-Policy naming convention: `verb-noun[-qualifier]` (e.g. `restrict-cvm-instance-type`, `require-cos-encryption`).
+Policy naming convention: `verb-noun[-qualifier]`, for example `restrict-cvm-instance-type` and `require-cos-encryption`.
 
 ## Notes
 
-- These policies use Route A (built-in imports) — no custom Sentinel SDK plugin is needed.
-- Sentinel reserved keywords (`rule` etc.) cannot be used as variable names.
-- `sentinel test` does not read `sentinel.hcl` — module imports must be declared in each test `.hcl` file.
-- Sentinel v0.41.0 requires `param "name" { value = ... }` syntax; the old `param name default value` form is deprecated.
+- Route A uses built-in Sentinel imports; no custom Sentinel SDK plugin is needed.
+- Sentinel reserved keywords such as `rule` cannot be used as variable names.
+- `sentinel test` requires module imports in each test `.hcl`; it does not use the policy-set module declarations as test fixtures.
+- Review provider schemas before enabling hard-mandatory policies. Terraform provider attributes can change across versions.
 
 ## License
 

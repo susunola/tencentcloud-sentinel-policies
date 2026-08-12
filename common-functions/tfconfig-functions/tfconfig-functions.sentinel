@@ -6,26 +6,26 @@ import "strings"
 
 ### find_resources ###
 find_resources = func(type) {
-  all_resources = filter tfconfig.resources as address, rc {
-    rc.type is type and
-    rc.provider_config_key matches "(.*)tencentcloud$" and
-    rc.mode is "managed"
-  }
-  return all_resources
+	all_resources = filter tfconfig.resources as address, rc {
+		rc.type is type and
+			rc.provider_config_key matches "(.*)tencentcloud$" and
+			rc.mode is "managed"
+	}
+	return all_resources
 }
 
 ### find_providers_by_type ###
 find_providers_by_type = func(type) {
-  all_providers = filter tfconfig.providers as address, p {
-    strings.split(address, ":")[0] is type
-  }
-  return all_providers
+	all_providers = filter tfconfig.providers as address, p {
+		strings.split(address, ":")[0] is type
+	}
+	return all_providers
 }
 
 ### find_all_resources ###
 find_all_resources = func() {
-  all = filter tfconfig.resources as address, rc {
-    rc.mode is "managed"
-  }
-  return all
+	all_resources = filter tfconfig.resources as address, rc {
+		rc.mode is "managed"
+	}
+	return all_resources
 }

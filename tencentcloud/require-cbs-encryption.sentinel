@@ -9,15 +9,15 @@ allDisks = plan.find_resources("tencentcloud_cbs_storage")
 
 violations = {}
 for allDisks as address, disk {
-  encrypted = plan.evaluate_attribute(disk, "encrypt") else null
-  if encrypted is null or encrypted is not true {
-    msg = address + " does not have encryption enabled (encrypt=true). " +
-          "All CBS disks must be encrypted at rest."
-    violations[address] = msg
-    print(msg)
-  }
+	encrypted = plan.evaluate_attribute(disk, "encrypt") else null
+	if encrypted is null or encrypted is not true {
+		msg = address + " does not have encryption enabled (encrypt=true). " +
+			"All CBS disks must be encrypted at rest."
+		violations[address] = msg
+		print(msg)
+	}
 }
 
 main = rule {
-  length(violations) is 0
+	length(violations) is 0
 }

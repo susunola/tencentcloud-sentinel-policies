@@ -1,0 +1,21 @@
+# require-cdb-audit-log
+# Requires audit logging on every TencentDB MySQL instance.
+
+import "tfplan-functions" as plan
+
+allDatabases = plan.find_resources("tencentcloud_mysql_instance")
+violations = {}
+
+for allDatabases as address, database {
+	audit_log_enabled = plan.evaluate_attribute(database, "audit_log_enabled") else null
+	if audit_log_enabled is null or audit_log_enabled is not true {
+		msg = address + " does not enable the CDB audit log. " +
+			"Set audit_log_enabled=true."
+		violations[address] = msg
+		print(msg)
+	}
+}
+
+main = rule {
+	length(violations) is 0
+}

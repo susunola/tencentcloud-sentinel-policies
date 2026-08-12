@@ -1,60 +1,64 @@
 # restrict-tke-cluster
 # Enforces security best practices for TKE (Tencent Kubernetes Engine) clusters:
 # 1. Cluster must be in a VPC (no basic network)
-# 2. Cluster version must meet minimum requirement
-# 3. Network plugin must be specified (VPC-CNI or Global Router)
+# 2. Cluster version must meet minimum requirement (parameterised)
+# 3. Network plugin must be in allowed list (parameterised)
+#
+# Note: min_kubernetes_version and allowed_network_types are params
+# to avoid hardcoding versions that age rapidly.
 
 import "tfplan-functions" as plan
 import "strings"
 import "types"
 
-# Minimum allowed Kubernetes version
+# Minimum allowed Kubernetes version — update this param as versions evolve
 param min_kubernetes_version default "1.28"
 
-# Allowed network plugins
-param allowed_network_types default ["VPC-CNI", "GR"]
+# Allowed network plugins — update as TKE adds new CNI options
+param allowed_network_types default ["VPC-CNI", "GR", "Cilium"]
 
 allClusters = plan.find_resources("tencentcloud_kubernetes_cluster")
 
 violations = {}
 for allClusters as address, cluster {
-  # Check VPC network (not basic network)
-  vpc_id = plan.evaluate_attribute(cluster, "vpc_id") else null
-  if vpc_id is null {
-    msg = address + " is not assigned to a VPC. " +
-          "TKE clusters must run in VPC network mode."
-    violations[address + ".vpc"] = msg
-    print(msg)
-  }
+	# Check VPC network (not basic network)
+	vpc_id = plan.evaluate_attribute(cluster, "vpc_id") else null
+	if vpc_id is null {
+		msg = address + " is not assigned to a VPC. " +
+			"TKE clusters must run in VPC network mode."
+		violations[address + ".vpc"] = msg
+		print(msg)
+	}
 
-  # Check Kubernetes version
-  k8s_version = plan.evaluate_attribute(cluster, "cluster_version") else null
-  if k8s_version is not null {
-    parts = ["0", "0"]
-    if types.type_of(k8s_version) is "string" {
-      parts = strings.split(k8s_version, ".")
-    }
-    min_parts = strings.split(min_kubernetes_version, ".")
-    if int(parts[0]) < int(min_parts[0]) or
-       (int(parts[0]) == int(min_parts[0]) and int(parts[1]) < int(min_parts[1])) {
-      msg = address + " runs Kubernetes " + k8s_version +
-            " which is below minimum version " + min_kubernetes_version
-      violations[address + ".version"] = msg
-      print(msg)
-    }
-  }
+	# Check Kubernetes version
+	k8s_version = plan.evaluate_attribute(cluster, "cluster_version") else null
+	if k8s_version is not null {
+		parts = ["0", "0"]
+		if types.type_of(k8s_version) is "string" {
+			parts = strings.split(k8s_version, ".")
+		}
+		min_parts = strings.split(min_kubernetes_version, ".")
+		if int(parts[0]) < int(min_parts[0]) or
+			(int(parts[0]) == int(min_parts[0]) and int(parts[1]) < int(min_parts[1])) {
+			msg = address + " runs Kubernetes " + k8s_version +
+				" which is below minimum version " +
+				min_kubernetes_version
+			violations[address + ".version"] = msg
+			print(msg)
+		}
+	}
 
-  # Check network plugin type
-  network_type = plan.evaluate_attribute(cluster, "network_type") else null
-  if network_type is not null and network_type not in allowed_network_types {
-    msg = address + " uses network plugin '" + network_type +
-          "' which is not in the allowed list: " +
-          plan.to_string(allowed_network_types)
-    violations[address + ".network"] = msg
-    print(msg)
-  }
+	# Check network plugin type
+	network_type = plan.evaluate_attribute(cluster, "network_type") else null
+	if network_type is not null and network_type not in allowed_network_types {
+		msg = address + " uses network plugin '" + network_type +
+			"' which is not in the allowed list: " +
+			plan.to_string(allowed_network_types)
+		violations[address + ".network"] = msg
+		print(msg)
+	}
 }
 
 main = rule {
-  length(violations) is 0
+	length(violations) is 0
 }

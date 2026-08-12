@@ -1,0 +1,47 @@
+# restrict-security-group-egress
+# Blocks security group egress rules that send traffic to 0.0.0.0/0 on all
+# ports or on well-known database ports (MySQL 3306, Redis 6379,
+# MongoDB 27017, MSSQL 1433, PostgreSQL 5432).
+# Unrestricted egress to database ports can indicate data exfiltration risk.
+#
+# Customize forbidden_ports to fit your organization's policy.
+
+import "tencentcloud-functions" as tc
+
+# Database ports that must NEVER be reachable via egress to 0.0.0.0/0
+param forbidden_ports default [3306, 6379, 27017, 1433, 5432]
+
+# CIDRs that are considered unrestricted
+param unrestricted_cidrs default ["0.0.0.0/0", "::/0"]
+
+all_rules = tc.find_security_group_rules()
+
+violations = {}
+for all_rules as key, sg_rule {
+	if sg_rule._direction is "egress" {
+		cidr = sg_rule.cidr_block else null
+		port = sg_rule.port else null
+
+		if cidr in unrestricted_cidrs {
+			is_all_ports = port is null or string(port) is "ALL"
+			if is_all_ports {
+				msg = key + " allows egress to " + cidr +
+					" on ALL ports - this is a critical security risk"
+				violations[key] = msg
+				print(msg)
+			} else if port in forbidden_ports {
+				protocol = tc.port_to_scheme(port)
+				msg = key + " allows egress to " + cidr + " on " + protocol +
+					" (" +
+					string(port) +
+					") - database ports must not be exposed"
+				violations[key] = msg
+				print(msg)
+			}
+		}
+	}
+}
+
+main = rule {
+	length(violations) is 0
+}

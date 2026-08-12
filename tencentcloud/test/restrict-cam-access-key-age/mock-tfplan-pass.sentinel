@@ -1,0 +1,10 @@
+resource_changes = {
+  "tencentcloud_cam_access_key.example": {
+    "mode": "managed",
+    "type": "tencentcloud_cam_access_key",
+    "change": {
+      "actions": ["create"],
+      "after": {},
+    },
+  },
+}

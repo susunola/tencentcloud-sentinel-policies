@@ -19,20 +19,22 @@ all_rules = tc.find_security_group_rules()
 
 violations = {}
 for all_rules as key, sg_rule {
-  cidr = sg_rule.cidr_block else null
-  port = sg_rule.port else null
+	cidr = sg_rule.cidr_block else null
+	port = sg_rule.port else null
 
-  if cidr in unrestricted_cidrs {
-    if port in forbidden_ports {
-      protocol = tc.port_to_scheme(port)
-      msg = key + " allows " + protocol + " (" + string(port) +
-            ") from " + cidr + " - this is a critical security risk"
-      violations[key] = msg
-      print(msg)
-    }
-  }
+	if cidr in unrestricted_cidrs {
+		if port in forbidden_ports {
+			protocol = tc.port_to_scheme(port)
+			msg = key + " allows " + protocol + " (" + string(port) +
+				") from " +
+				cidr +
+				" - this is a critical security risk"
+			violations[key] = msg
+			print(msg)
+		}
+	}
 }
 
 main = rule {
-  length(violations) is 0
+	length(violations) is 0
 }

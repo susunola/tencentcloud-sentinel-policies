@@ -1,0 +1,14 @@
+resource_changes = {
+  "tencentcloud_instance.prod": {
+    "mode": "managed",
+    "type": "tencentcloud_instance",
+    "change": {
+      "actions": ["delete"],
+      "before": {
+        "tags": {
+          "Environment": "prod",
+        },
+      },
+    },
+  },
+}

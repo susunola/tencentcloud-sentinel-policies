@@ -1,0 +1,18 @@
+resource_changes = {
+  "tencentcloud_security_group.open": {
+    "mode": "managed",
+    "type": "tencentcloud_security_group",
+    "change": {
+      "actions": ["create"],
+      "after": {
+        "egress": [
+          {
+            "cidr_block": "0.0.0.0/0",
+            "protocol": "ALL",
+            "action": "ACCEPT",
+          },
+        ],
+      },
+    },
+  },
+}

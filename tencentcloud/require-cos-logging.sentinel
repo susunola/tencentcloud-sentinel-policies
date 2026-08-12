@@ -1,0 +1,21 @@
+# require-cos-logging
+# Requires every COS bucket to configure a log set.
+
+import "tfplan-functions" as plan
+
+allBuckets = plan.find_resources("tencentcloud_cos_bucket")
+violations = {}
+
+for allBuckets as address, bucket {
+	log_set_id = plan.evaluate_attribute(bucket, "log_set_id") else null
+	if log_set_id is null or log_set_id is "" {
+		msg = address + " does not configure COS logging. " +
+			"Set log_set_id to a non-empty value."
+		violations[address] = msg
+		print(msg)
+	}
+}
+
+main = rule {
+	length(violations) is 0
+}

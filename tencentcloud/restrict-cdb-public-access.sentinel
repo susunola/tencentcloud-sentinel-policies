@@ -9,29 +9,29 @@ allDatabases = plan.find_resources("tencentcloud_mysql_instance")
 
 violations = {}
 for allDatabases as address, db {
-  wan_status = plan.evaluate_attribute(db, "internet_service") else null
+	wan_status = plan.evaluate_attribute(db, "internet_service") else null
 
-  # internet_service = 1 means public access is turned ON
-  if wan_status is not null and wan_status is 1 {
-    msg = address + " has public internet access enabled (internet_service=1). " +
-          "Database instances must not be publicly accessible."
-    violations[address] = msg
-    print(msg)
-  }
+	# internet_service = 1 means public access is turned ON
+	if wan_status is not null and wan_status is 1 {
+		msg = address + " has public internet access enabled (internet_service=1). " +
+			"Database instances must not be publicly accessible."
+		violations[address] = msg
+		print(msg)
+	}
 }
 
 # Also check tencentcloud_mysql_instance's internet_host parameter
 allRedis = plan.find_resources("tencentcloud_redis_instance")
 for allRedis as address, redis {
-  wan = plan.evaluate_attribute(redis, "wan_ip") else null
-  if wan is not null {
-    msg = address + " has public internet access (wan_ip=" + string(wan) + "). " +
-          "Redis instances must not be publicly accessible."
-    violations[address] = msg
-    print(msg)
-  }
+	wan = plan.evaluate_attribute(redis, "wan_ip") else null
+	if wan is not null {
+		msg = address + " has public internet access (wan_ip=" + string(wan) + "). " +
+			"Redis instances must not be publicly accessible."
+		violations[address] = msg
+		print(msg)
+	}
 }
 
 main = rule {
-  length(violations) is 0
+	length(violations) is 0
 }

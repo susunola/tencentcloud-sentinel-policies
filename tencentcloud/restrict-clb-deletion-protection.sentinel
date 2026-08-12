@@ -1,0 +1,21 @@
+# restrict-clb-deletion-protection
+# Requires deletion protection on every CLB instance.
+
+import "tfplan-functions" as plan
+
+allCLBs = plan.find_resources("tencentcloud_clb_instance")
+violations = {}
+
+for allCLBs as address, clb {
+	deletion_protection = plan.evaluate_attribute(clb, "deletion_protection") else null
+	if deletion_protection is null or deletion_protection is not true {
+		msg = address + " does not enable CLB deletion protection. " +
+			"Set deletion_protection=true."
+		violations[address] = msg
+		print(msg)
+	}
+}
+
+main = rule {
+	length(violations) is 0
+}

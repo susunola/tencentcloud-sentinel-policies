@@ -1,0 +1,12 @@
+resource_changes = {
+  "tencentcloud_kms_key.data": {
+    "mode": "managed",
+    "type": "tencentcloud_kms_key",
+    "change": {
+      "actions": ["create"],
+      "after": {
+        "key_rotation_enabled": true,
+      },
+    },
+  },
+}

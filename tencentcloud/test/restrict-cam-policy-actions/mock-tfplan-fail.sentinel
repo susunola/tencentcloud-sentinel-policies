@@ -1,0 +1,12 @@
+resource_changes = {
+  "tencentcloud_cam_policy.example": {
+    "mode": "managed",
+    "type": "tencentcloud_cam_policy",
+    "change": {
+      "actions": ["create"],
+      "after": {
+        "document": "{\"Statement\":[{\"Effect\":\"Allow\",\"Action\":\"*\",\"Resource\":\"*\"}]}",
+      },
+    },
+  },
+}

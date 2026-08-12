@@ -1,0 +1,5 @@
+providers = {
+  "tencentcloud": {
+    "version_constraint": ">= 1.81.0",
+  },
+}

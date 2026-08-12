@@ -1,0 +1,27 @@
+# restrict-cos-bucket-policy
+# Prevents COS bucket policies from granting access to public principals.
+
+import "tfplan-functions" as plan
+
+allBucketPolicies = plan.find_resources("tencentcloud_cos_bucket_policy")
+violations = {}
+
+for allBucketPolicies as address, bucket_policy {
+	policy_json = plan.evaluate_attribute(bucket_policy, "policy") else ""
+	has_wildcard_principal = policy_json contains "\"Principal\": \"*\"" or
+		policy_json contains "\"Principal\":\"*\"" or
+		policy_json contains "\"principal\": \"*\"" or
+		policy_json contains "\"principal\":\"*\""
+	has_public_qcs_principal = policy_json contains "qcs::cam::anyone"
+
+	if has_wildcard_principal or has_public_qcs_principal {
+		msg = address + " grants access to a public principal. " +
+			"COS bucket policies must not use wildcard principals or qcs::cam::anyone."
+		violations[address] = msg
+		print(msg)
+	}
+}
+
+main = rule {
+	length(violations) is 0
+}

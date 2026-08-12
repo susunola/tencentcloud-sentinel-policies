@@ -10,14 +10,15 @@ import "strings"
 # Find all TencentCloud resources that support tags (from the given list)
 # across all resource types the provider manages.
 find_resources_with_standard_tags = func(resource_types) {
-  resources = filter tfplan.resource_changes as address, rc {
-    rc.provider_name matches "(.*)tencentcloud$" and
-    rc.type in resource_types and
-    rc.mode is "managed" and
-    (rc.change.actions contains "create" or rc.change.actions contains "update" or
-     rc.change.actions contains "read" or rc.change.actions contains "no-op")
-  }
-  return resources
+	resources = filter tfplan.resource_changes as address, rc {
+		rc.provider_name matches "(.*)tencentcloud$" and
+			rc.type in resource_types and
+			rc.mode is "managed" and
+			(rc.change.actions contains "create" or rc.change.actions contains "update" or
+				rc.change.actions contains "read" or
+				rc.change.actions contains "no-op")
+	}
+	return resources
 }
 
 ### find_security_group_rules ###
@@ -26,83 +27,83 @@ find_resources_with_standard_tags = func(resource_types) {
 # Returns a flat list of ingress/egress rule objects with their parent
 # security group address.
 find_security_group_rules = func() {
-  rules = {}
+	rules = {}
 
-  # Handle tencentcloud_security_group (inline rules)
-  sgs = plan.find_resources("tencentcloud_security_group")
-  for sgs as address, sg {
-    ingress = plan.find_blocks(sg, "ingress")
-    for ingress as i, r {
-      r["_parent_address"] = address
-      r["_direction"] = "ingress"
-      rules[address + ".ingress[" + string(i) + "]"] = r
-    }
-    egress = plan.find_blocks(sg, "egress")
-    for egress as i, r {
-      r["_parent_address"] = address
-      r["_direction"] = "egress"
-      rules[address + ".egress[" + string(i) + "]"] = r
-    }
-  }
+	# Handle tencentcloud_security_group (inline rules)
+	sgs = plan.find_resources("tencentcloud_security_group")
+	for sgs as address, sg {
+		ingress = plan.find_blocks(sg, "ingress")
+		for ingress as i, r {
+			r["_parent_address"] = address
+			r["_direction"] = "ingress"
+			rules[address + ".ingress[" + string(i) + "]"] = r
+		}
+		egress = plan.find_blocks(sg, "egress")
+		for egress as i, r {
+			r["_parent_address"] = address
+			r["_direction"] = "egress"
+			rules[address + ".egress[" + string(i) + "]"] = r
+		}
+	}
 
-  # Handle tencentcloud_security_group_rule_set (standalone rules)
-  rule_sets = plan.find_resources("tencentcloud_security_group_rule_set")
-  for rule_sets as address, rs {
-    ingress_rules = plan.find_blocks(rs, "ingress")
-    for ingress_rules as i, r {
-      r["_parent_address"] = address
-      r["_direction"] = "ingress"
-      rules[address + ".ingress[" + string(i) + "]"] = r
-    }
-    egress_rules = plan.find_blocks(rs, "egress")
-    for egress_rules as i, r {
-      r["_parent_address"] = address
-      r["_direction"] = "egress"
-      rules[address + ".egress[" + string(i) + "]"] = r
-    }
-  }
+	# Handle tencentcloud_security_group_rule_set (standalone rules)
+	rule_sets = plan.find_resources("tencentcloud_security_group_rule_set")
+	for rule_sets as address, rs {
+		ingress_rules = plan.find_blocks(rs, "ingress")
+		for ingress_rules as i, r {
+			r["_parent_address"] = address
+			r["_direction"] = "ingress"
+			rules[address + ".ingress[" + string(i) + "]"] = r
+		}
+		egress_rules = plan.find_blocks(rs, "egress")
+		for egress_rules as i, r {
+			r["_parent_address"] = address
+			r["_direction"] = "egress"
+			rules[address + ".egress[" + string(i) + "]"] = r
+		}
+	}
 
-  return rules
+	return rules
 }
 
 ### find_clb_listeners ###
 # Extract CLB listener blocks from tencentcloud_clb_listener resources.
 find_clb_listeners = func() {
-  listeners = plan.find_resources("tencentcloud_clb_listener")
-  return listeners
+	listeners = plan.find_resources("tencentcloud_clb_listener")
+	return listeners
 }
 
 ### validate_cidr_not_open ###
 # Check if a CIDR value is "0.0.0.0/0" (open to the world).
 # Returns true if the CIDR is safe (not open).
 validate_cidr_not_open = func(cidr) {
-  if cidr is null {
-    return false
-  }
-  return cidr is not "0.0.0.0/0"
+	if cidr is null {
+		return false
+	}
+	return cidr is not "0.0.0.0/0"
 }
 
 ### port_to_scheme ###
 # Map common port numbers to their protocol names for readable messages.
 port_to_scheme = func(port) {
-  case string(port) {
-    when "22":
-      return "SSH"
-    when "3389":
-      return "RDP"
-    when "80":
-      return "HTTP"
-    when "443":
-      return "HTTPS"
-    when "3306":
-      return "MySQL"
-    when "5432":
-      return "PostgreSQL"
-    when "6379":
-      return "Redis"
-    when "27017":
-      return "MongoDB"
-    else:
-      return "Port " + string(port)
-  }
+	case string(port) {
+		when "22":
+			return "SSH"
+		when "3389":
+			return "RDP"
+		when "80":
+			return "HTTP"
+		when "443":
+			return "HTTPS"
+		when "3306":
+			return "MySQL"
+		when "5432":
+			return "PostgreSQL"
+		when "6379":
+			return "Redis"
+		when "27017":
+			return "MongoDB"
+		else:
+			return "Port " + string(port)
+	}
 }

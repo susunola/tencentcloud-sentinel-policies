@@ -1,0 +1,24 @@
+# restrict-clb-https
+# Requires CLB listeners to use HTTPS instead of HTTP.
+# Plain HTTP listeners transmit traffic unencrypted, exposing credentials
+# and data in transit. All HTTP listeners should be upgraded to HTTPS
+# with a valid certificate.
+
+import "tfplan-functions" as plan
+
+allListeners = plan.find_resources("tencentcloud_clb_listener")
+
+violations = {}
+for allListeners as address, listener {
+	protocol = plan.evaluate_attribute(listener, "protocol") else null
+	if protocol is "HTTP" {
+		msg = address + " uses plain HTTP. CLB listeners must use HTTPS " +
+			"to encrypt traffic in transit."
+		violations[address] = msg
+		print(msg)
+	}
+}
+
+main = rule {
+	length(violations) is 0
+}

@@ -1,0 +1,27 @@
+# require-provider-version-constraint
+# Requires the tencentcloud provider block to declare a version constraint.
+# Pinning the provider version prevents uncontrolled upgrades that can
+# introduce breaking changes or unexpected behavior in production.
+#
+# This policy uses the tfconfig/v2 import (static configuration) rather
+# than tfplan/v2, since provider requirements are configuration-level.
+
+import "tfconfig-functions" as config
+
+tencentcloud_providers = config.find_providers_by_type("tencentcloud")
+
+violations = {}
+for tencentcloud_providers as address, provider {
+	constraint = provider.version_constraint else ""
+	if length(constraint) is 0 {
+		msg = "Provider " + address + " does not declare a version constraint. " +
+			"Pin the tencentcloud provider version (e.g. \">= 1.81.0\") " +
+			"to prevent uncontrolled upgrades."
+		violations[address] = msg
+		print(msg)
+	}
+}
+
+main = rule {
+	length(violations) is 0
+}

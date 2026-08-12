@@ -9,15 +9,15 @@ allCLBs = plan.find_resources("tencentcloud_clb_instance")
 
 violations = {}
 for allCLBs as address, clb {
-  log_enabled = plan.evaluate_attribute(clb, "log_set_id") else null
-  if log_enabled is null {
-    msg = address + " does not have access logging enabled. " +
-          "All CLB instances must have log_set_id configured."
-    violations[address] = msg
-    print(msg)
-  }
+	log_enabled = plan.evaluate_attribute(clb, "log_set_id") else null
+	if log_enabled is null {
+		msg = address + " does not have access logging enabled. " +
+			"All CLB instances must have log_set_id configured."
+		violations[address] = msg
+		print(msg)
+	}
 }
 
 main = rule {
-  length(violations) is 0
+	length(violations) is 0
 }

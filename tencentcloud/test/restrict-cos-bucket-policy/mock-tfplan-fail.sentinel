@@ -1,0 +1,12 @@
+resource_changes = {
+  "tencentcloud_cos_bucket_policy.example": {
+    "mode": "managed",
+    "type": "tencentcloud_cos_bucket_policy",
+    "change": {
+      "actions": ["create"],
+      "after": {
+        "policy": "{\"Principal\": \"*\"}",
+      },
+    },
+  },
+}

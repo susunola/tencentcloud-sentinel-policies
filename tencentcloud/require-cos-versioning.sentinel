@@ -1,0 +1,21 @@
+# require-cos-versioning
+# Requires versioning on every COS bucket.
+
+import "tfplan-functions" as plan
+
+allBuckets = plan.find_resources("tencentcloud_cos_bucket")
+violations = {}
+
+for allBuckets as address, bucket {
+	versioning_enabled = plan.evaluate_attribute(bucket, "versioning_enabled") else null
+	if versioning_enabled is null or versioning_enabled is not true {
+		msg = address + " does not enable COS bucket versioning. " +
+			"Set versioning_enabled=true."
+		violations[address] = msg
+		print(msg)
+	}
+}
+
+main = rule {
+	length(violations) is 0
+}

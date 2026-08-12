@@ -1,0 +1,12 @@
+resource_changes = {
+  "tencentcloud_instance.web": {
+    "mode": "managed",
+    "type": "tencentcloud_instance",
+    "change": {
+      "actions": ["create"],
+      "after": {
+        "image_id": "custom-unapproved123",
+      },
+    },
+  },
+}

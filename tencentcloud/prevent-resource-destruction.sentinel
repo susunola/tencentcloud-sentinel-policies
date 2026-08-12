@@ -1,0 +1,39 @@
+# prevent-resource-destruction
+# Prevents destruction of resources tagged as critical.
+# Any managed resource being deleted that carries a protected tag
+# (Environment=prod or ManagedBy=terraform by default) is blocked,
+# catching accidental deletions of production or Terraform-managed
+# infrastructure before they happen.
+
+import "tfplan/v2" as tfplan
+
+# Tag key/value pairs that mark a resource as critical
+param protected_tags default {
+	"Environment": "prod",
+	"ManagedBy":   "terraform",
+}
+
+violations = {}
+for tfplan.resource_changes as address, rc {
+	if rc.mode is "managed" and rc.change.actions contains "delete" {
+		before = rc.change.before else null
+		tags = {}
+		if before is not null {
+			tags = before.tags else {}
+		}
+		for protected_tags as tag_key, tag_value {
+			actual = tags[tag_key] else null
+			if actual is not null and actual is tag_value {
+				msg = address + " is tagged " + tag_key + "=" + actual +
+					" and must not be destroyed. " +
+					"Remove the delete action or get explicit approval first."
+				violations[address] = msg
+				print(msg)
+			}
+		}
+	}
+}
+
+main = rule {
+	length(violations) is 0
+}
